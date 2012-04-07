@@ -1,0 +1,21 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+	compile 'commons-io:commons-io:2.1'
+	compile 'commons-lang:commons-lang:2.6'
+}
+
+jar {
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    manifest { attributes 'Main-Class': 'appl.dcpu.frontend.FrontendPanel' }
+}
+
+task(run, dependsOn: 'build', type: JavaExec) {
+    main = 'appl.dcpu.frontend.FrontendPanel'
+    classpath = sourceSets.main.runtimeClasspath
+}
