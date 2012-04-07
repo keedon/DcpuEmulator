@@ -1,0 +1,23 @@
+DCPU-16 emulator written in Java with a Swing front-end.
+
+This is a very early version which does display the DCPU screen
+I'm not entirely sure it's correct, since i've only got Notch's
+sample program to go from.
+
+To use.
+
+You will need gradle installed to run the build.
+
+Running "gradle run" will start the emulator.  There are only two menu options at the moment:
+
+File>Load - will load a hex dump (see the test directory for examples)
+File>Run - will run the emulation. A trace of the CPU running is written to sysout.
+
+TODO:
+ * Move the trace to a CPU status pane in the application
+ * Add a step/breakpoint while running.
+ * Add an assembler.
+ * Add keyboard support
+ * Add floppy disk support (when there are some more details)
+ * Get the cpu cycle time to match the real processor.
+ * Write a FORTH interpeter
