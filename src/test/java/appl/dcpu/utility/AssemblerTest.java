@@ -29,7 +29,7 @@ public class AssemblerTest {
 "                \n" +
 "; Hang forever. X should now be 0x40 if everything went right.\n" +
 ":crash        SET PC, crash            ; 7dc1 001a [*]\n" +
-"\n" +
+":stuff		  dat \"text\",0x44,crash\n" +
 "; [*]: Note that these can be one word shorter and one cycle faster by using the short form (0x00-0x1f) of literals,\n" +
 ";      but my assembler doesn't support short form labels yet. ";
 

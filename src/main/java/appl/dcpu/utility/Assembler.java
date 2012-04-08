@@ -12,6 +12,7 @@ public class Assembler {
 	private static final String REGISTERS = "abcxyzij";
 	private static final Map<String, Integer> opCodes = new HashMap<String, Integer>();
     static {
+    	opCodes.put("dat", -1);
         opCodes.put("set", 1);
         opCodes.put("add", 2);
         opCodes.put("sub", 3);
@@ -86,13 +87,55 @@ public class Assembler {
 	private void processOpcode(List<String> result) throws IOException {
 		Integer opCode = opCodes.get(tokenAsString());
 		if (opCode != null) {
-			if (opCode > 15) {
+			if (opCode < 0) {
+				processDirective(opCode, result);
+			} else if (opCode > 15) {
 				processNonBasic(opCode, result);
 			} else {
 				processBasic(opCode, result);
 			}
 		} else {
 			throw new RuntimeException("Unknown opcode " + tokeniser);
+		}
+	}
+
+	private void processDirective(Integer opCode, List<String> result) throws IOException {
+		switch (opCode) {
+		case -1:
+			// dat
+			tokeniser.nextToken();
+			while (tokeniser.ttype != StreamTokenizer.TT_EOL) {
+				if (tokenAsString().startsWith("\"")) {
+					addString(result);
+				} else if (isNumeric(tokenAsString().substring(0, 1))) {
+					addNumber(result);
+				} else if (labelDictionary.containsKey(tokenAsString())) {
+					result.add(toHex(labelDictionary.get(tokenAsString())));
+					currentPC++;
+				} else {
+					// Add a zero
+					result.add("0000");
+					currentPC++;
+				}
+				tokeniser.nextToken();
+				tokeniser.nextToken();
+			}
+		}
+	}
+
+	private void addNumber(List<String> result) {
+		int value = convertToNumber(tokenAsString());
+		processLiteral(result, value);
+	}
+
+	private void addString(List<String> result) throws IOException {
+		tokeniser.nextToken();
+		while (!tokenAsString().equals("\"")) {
+			for (byte ch : tokenAsString().getBytes()) {
+				result.add(toHex(ch));
+				currentPC++;
+			}
+			tokeniser.nextToken();
 		}
 	}
 

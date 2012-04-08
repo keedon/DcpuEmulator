@@ -43,9 +43,9 @@ public class Screen extends JPanel {
 
 	public Screen() {
 		setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
-		font = new Font("Courier", Font.PLAIN, 10);
+		font = new Font("Courier", Font.PLAIN, 14);
 		this.setFont(font);
-		setPreferredSize(new Dimension(300, 300));
+		setPreferredSize(new Dimension(700, 500));
 	}
 	
 	public void setMem(int pos, int ch) {

@@ -20,4 +20,4 @@ TODO:
  * Add keyboard support
  * Add floppy disk support (when there are some more details)
  * Get the cpu cycle time to match the real processor.
- * Write a FORTH interpeter
+ * Write a FORTH interpreter
