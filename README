@@ -16,7 +16,7 @@ File>Run - will run the emulation. A trace of the CPU running is written to syso
 TODO:
  * Move the trace to a CPU status pane in the application
  * Add a step/breakpoint while running.
- * Add an assembler.
+ * Assembler to produce a listing file
  * Add keyboard support
  * Add floppy disk support (when there are some more details)
  * Get the cpu cycle time to match the real processor.

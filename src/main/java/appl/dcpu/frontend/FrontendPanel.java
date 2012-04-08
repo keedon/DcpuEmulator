@@ -6,16 +6,26 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.List;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import org.apache.commons.io.IOUtils;
+
 import appl.dcpu.processor.Cpu;
+import appl.dcpu.utility.Assembler;
 
 public class FrontendPanel extends JFrame implements ActionListener {
 
@@ -60,6 +70,11 @@ public class FrontendPanel extends JFrame implements ActionListener {
 		mainFrame.setVisible(true);
 		content.add(mainFrame, BorderLayout.CENTER);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		try {
+			fc.setCurrentDirectory(new File(new File(".").getCanonicalPath()));
+		} catch (IOException e) {
+
+		}
 	}
 
 	private void addMenu() {
@@ -71,6 +86,9 @@ public class FrontendPanel extends JFrame implements ActionListener {
 		JMenuItem runAction = new JMenuItem("Run");
 		runAction.addActionListener(this);
 		fileMenu.add(runAction);
+		JMenuItem assembleAction = new JMenuItem("Assemble");
+		assembleAction.addActionListener(this);
+		fileMenu.add(assembleAction);
 		menuBar.add(fileMenu );
 		setJMenuBar(menuBar);
 	}
@@ -103,6 +121,45 @@ public class FrontendPanel extends JFrame implements ActionListener {
 		}
 		if (e.getActionCommand().equals("Run")) {
 			cpu.start();
+		}
+		if (e.getActionCommand().equals("Assemble")) {
+			if (JFileChooser.APPROVE_OPTION == fc.showOpenDialog(this)) {
+				File sourceFile = fc.getSelectedFile();
+				Assembler asm = new Assembler(loadFile(sourceFile));
+				String assembledCode = asm.assemble();
+				File destFile = new File(sourceFile.getPath().replace(".asm", "") + ".hex");
+				writeFile(destFile, assembledCode);
+				JOptionPane.showMessageDialog(this, "Assembly completed - output in " + destFile);
+			}
+		}
+	}
+
+	private void writeFile(File destFile, String assembledCode) {
+		BufferedWriter bw = null;
+		try {
+			bw = new BufferedWriter(new FileWriter(destFile));
+			IOUtils.write(assembledCode, bw);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			IOUtils.closeQuietly(bw);
+		}
+	}
+
+	private String loadFile(File sourceFile) {
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(sourceFile));
+			StringBuilder sb = new StringBuilder();
+			List<String> lines = IOUtils.readLines(br);
+			for (String line : lines) {
+				sb.append(line).append('\n');	
+			}
+			return sb.toString();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			IOUtils.closeQuietly(br);
 		}
 	}
 }

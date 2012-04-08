@@ -91,7 +91,7 @@ public class Cpu implements Runnable {
 		if (addressModeNeedsNextWord(b)) {
 			ebNext = PC++;
 		}
-		System.out.println(String.format("op=%x, a=%x, aNext=%x, b=%x, bNext=%x", op, a, eaNext, b, ebNext));
+		System.out.println(String.format("word=%04x, op=%x, a=%x, aNext=%x, b=%x, bNext=%x", inst, op, a, eaNext, b, ebNext));
 		if (skip) {
 			skip = false;
 		} else {

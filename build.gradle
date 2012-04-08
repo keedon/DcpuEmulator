@@ -8,6 +8,8 @@ repositories {
 dependencies {
 	compile 'commons-io:commons-io:2.1'
 	compile 'commons-lang:commons-lang:2.6'
+	
+	testCompile 'junit:junit:4.+'
 }
 
 jar {
