@@ -7,15 +7,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 public class Assembler {
 	public class AssemblyResult {
 		public final String hexResult;
 		public final String listing;
+		public final boolean success;
 		
-		public AssemblyResult(String hex, String listing) {
+		public AssemblyResult(String hex, String listing, boolean success) {
 			hexResult = hex;
 			this.listing = listing;
+			this.success = success;
 		}
 	}
 
@@ -47,11 +51,13 @@ public class Assembler {
 	private int currentPC;
 	private StringBuilder listing;
 	private String[] programForListing;
+	private boolean success;
 	
 	public Assembler(String program) {
 		this.program = program;
 		programForListing = program.split("\n");
-		labelDictionary = new HashMap<String, Integer>();
+		labelDictionary = new TreeMap<String, Integer>();
+		success = true;
 	}
 	
 	public AssemblyResult assemble() {
@@ -65,7 +71,9 @@ public class Assembler {
 			listing = new StringBuilder();
 			currentPC = 0;
 			createTokeniser();
-			return new AssemblyResult(runPass(), listing.toString());
+			String hex = runPass();
+			addLabelDictionary();
+			return new AssemblyResult(hex, listing.toString(), success);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -95,16 +103,24 @@ public class Assembler {
 					listing.append('\t').append(currentLine);
 				}
 				tokeniser.nextToken();
+				if (tokenAsString().startsWith(";")) {
+					skipRestOfLine();
+				}
 			} catch (RuntimeException e) {
 				listing.append('\n');
 				listing.append(programForListing[tokeniser.lineno() - 1]).append('\n');
 				listing.append("*** ").append(e.getMessage());
-				while (tokeniser.ttype != StreamTokenizer.TT_EOL && tokeniser.ttype != StreamTokenizer.TT_EOF) {
-					tokeniser.nextToken();
-				}
+				skipRestOfLine();
+				success = false;
 			}
 		}
 		return asString(result);
+	}
+
+	private void skipRestOfLine() throws IOException {
+		while (tokeniser.ttype != StreamTokenizer.TT_EOL && tokeniser.ttype != StreamTokenizer.TT_EOF) {
+			tokeniser.nextToken();
+		}
 	}
 
 	private String asString(List<String> result) {
@@ -116,6 +132,10 @@ public class Assembler {
 	}
 
 	private void processOpcode(List<String> result) throws IOException {
+		if (tokenAsString().startsWith(";")) {
+			skipRestOfLine();
+			return;
+		}
 		Integer opCode = opCodes.get(tokenAsString());
 		if (opCode != null) {
 			if (opCode < 0) {
@@ -136,6 +156,10 @@ public class Assembler {
 			// dat
 			tokeniser.nextToken();
 			while (tokeniser.ttype != StreamTokenizer.TT_EOL) {
+				if (tokenAsString().startsWith(";")) {
+					skipRestOfLine();
+					return;
+				}
 				if (tokenAsString().startsWith("\"")) {
 					addString(result);
 				} else if (isNumeric(tokenAsString().substring(0, 1))) {
@@ -199,6 +223,9 @@ public class Assembler {
 
 	private int processArg(List<String> result) throws IOException {
 		tokeniser.nextToken();
+		if (tokenAsString().startsWith(";")) {
+			throw new RuntimeException("Missing argument");
+		}
 		if (labelDictionary.containsKey(tokenAsString())) {
 			int value = labelDictionary.get(tokenAsString());
 			return processLiteral(result, value);
@@ -303,12 +330,18 @@ public class Assembler {
 		StringReader r = new StringReader(program);
 		tokeniser = new StreamTokenizer(r);
 		tokeniser.resetSyntax();
-		tokeniser.commentChar(';');
 		tokeniser.eolIsSignificant(true);
 		tokeniser.lowerCaseMode(true);
 		tokeniser.wordChars('0', '9');
 		tokeniser.wordChars('a', 'z');
 		tokeniser.wordChars('A', 'Z');
 		tokeniser.whitespaceChars(0, ' ');
+	}
+	
+	private void addLabelDictionary() {
+		listing.append("\n\n======== Label Directory ========\n\n");
+		for (Entry<String, Integer> entry : labelDictionary.entrySet()) {
+			listing.append(toHex(entry.getValue())).append('\t').append(entry.getKey()).append('\n');
+		}
 	}
 }

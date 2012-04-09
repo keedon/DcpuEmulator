@@ -157,11 +157,15 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 				File sourceFile = fc.getSelectedFile();
 				Assembler asm = new Assembler(loadFile(sourceFile));
 				AssemblyResult assembledCode = asm.assemble();
-				File destFile = new File(sourceFile.getPath().replace(".asm", "") + ".hex");
-				writeFile(destFile, assembledCode.hexResult);
 				File listingFile = new File(sourceFile.getPath().replace(".asm", "") + ".list");
 				writeFile(listingFile, assembledCode.listing);
-				JOptionPane.showMessageDialog(this, "Assembly completed - output in " + destFile);
+				if (assembledCode.success) {
+					File destFile = new File(sourceFile.getPath().replace(".asm", "") + ".hex");
+					writeFile(destFile, assembledCode.hexResult);
+					JOptionPane.showMessageDialog(this, "Assembly completed - output in " + destFile);
+				} else {
+					JOptionPane.showMessageDialog(this, "Assembly failed - see " + listingFile);
+				}
 			}
 		}
 	}
