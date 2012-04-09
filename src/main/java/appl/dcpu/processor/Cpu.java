@@ -91,7 +91,7 @@ public class Cpu implements Runnable {
 	public void step() {
 		int val, ea, eb;
 		int eaNext = 0, ebNext = 0;
-		int inst = getMem(PC++);
+		int inst = getMem(PC++, true);
 		int op = inst & 15;
 		int a = (inst >> 4) & 0x3f;
 		int b = (inst >> 10) & 0x3f;
@@ -208,18 +208,18 @@ public class Cpu implements Runnable {
 			return registers[ea];
 		}
 		if (ea <= 0xf) {
-			return getMem(registers[ea - 8]);
+			return getMem(registers[ea - 8], true);
 		}
 		if (ea <= 0x17) {
-			return getMem(registers[ea - 16] + getMem(eaNext));
+			return getMem(registers[ea - 16] + getMem(eaNext, true), true);
 		}
 		switch (ea) {
 		case 0x18:
-			return getMem(SP++);
+			return getMem(SP++, true);
 		case 0x19:
-			return getMem(SP);
+			return getMem(SP, true);
 		case 0x1a:
-			return getMem(--SP);
+			return getMem(--SP, true);
 		case 0x1b:
 			return SP;
 		case 0x1c:
@@ -227,9 +227,9 @@ public class Cpu implements Runnable {
 		case 0x1d:
 			return O;
 		case 0x1e:
-			return getMem(getMem(eaNext));
+			return getMem(getMem(eaNext, true), true);
 		case 0x1f:
-			return getMem(eaNext);
+			return getMem(eaNext, true);
 		default:
 			return ea - 0x20;
 		}
@@ -256,7 +256,7 @@ public class Cpu implements Runnable {
 			return;
 		}
 		if (ea <= 0x17) {
-			setMem(registers[ea - 16] + getMem(eaNext), value);
+			setMem(registers[ea - 16] + getMem(eaNext, true), value);
 			return;
 		}
 		switch (ea) {
@@ -279,7 +279,7 @@ public class Cpu implements Runnable {
 			O = value;
 			break;
 		case 0x1e:
-			setMem(getMem(eaNext), value);
+			setMem(getMem(eaNext, true), value);
 			break;
 		case 0x1f:
 			setMem(eaNext, value);
@@ -290,16 +290,23 @@ public class Cpu implements Runnable {
 		}
 	}
 	
-	private int getMem(int addr) {
+	private int getMem(int addr, boolean clearKeyboard) {
 		addr = wrapMemory(addr);
 		if (addr >= SCREEN_ADDRESS && addr <= (SCREEN_ADDRESS + 960)) {
 			return screen.getMem(addr - SCREEN_ADDRESS);
 		}
 		if (addr >= KEYBOARD_ADDRESS && (addr <  KEYBOARD_ADDRESS + ringBuffer.length)) {
-			return ringBuffer[addr - KEYBOARD_ADDRESS];
+			synchronized (ringBuffer) {
+				byte b = ringBuffer[addr - KEYBOARD_ADDRESS];
+				if (clearKeyboard) {
+					ringBuffer[addr - KEYBOARD_ADDRESS] = 0;
+				}
+				return b;
+			}
 		}
 		return memory[addr];
 	}
+	
 
 	private int wrapMemory(int addr) {
 		return addr & (MEM_SIZE - 1);
@@ -324,7 +331,7 @@ public class Cpu implements Runnable {
 	}
 
 	public int getWordAt(int i) {
-		return getMem(i);
+		return getMem(i, false);
 	}
 
 }

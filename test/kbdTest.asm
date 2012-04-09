@@ -7,6 +7,7 @@
 		set	pc,loop
 		add j,1
 		and j,0xf
+		bor  a,0x7180		; White on blue
 		set	[i],a
 		add i,1
 		set pc,loop		

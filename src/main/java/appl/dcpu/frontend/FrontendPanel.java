@@ -199,12 +199,14 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		ringBuffer[position] = (byte) e.getKeyChar();
-		position = (position + 1) % 16;
-		keyboardBuffer.setText(new String(ringBuffer));
 	}
 
 	@Override
 	public void keyTyped(KeyEvent e) {
+		synchronized (keyboardBuffer) {
+			ringBuffer[position] = (byte) e.getKeyChar();
+			position = (position + 1) % 16;
+			keyboardBuffer.setText(new String(ringBuffer));
+		}
 	}
 }
