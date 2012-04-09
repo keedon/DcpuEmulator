@@ -26,10 +26,9 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
-import org.apache.commons.io.IOUtils;
-
 import appl.dcpu.processor.Cpu;
 import appl.dcpu.utility.Assembler;
+import appl.dcpu.utility.IOUtils;
 
 public class FrontendPanel extends JFrame implements ActionListener, KeyListener {
 
@@ -168,7 +167,7 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 		BufferedWriter bw = null;
 		try {
 			bw = new BufferedWriter(new FileWriter(destFile));
-			IOUtils.write(assembledCode, bw);
+			bw.write(assembledCode);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} finally {

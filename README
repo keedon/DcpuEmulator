@@ -7,17 +7,20 @@ sample program to go from.
 To use.
 
 You will need gradle installed to run the build.
+Running "gradle run" will start the emulator.  There are three menu options at the moment:
 
-Running "gradle run" will start the emulator.  There are only two menu options at the moment:
+If you don't want to install gradle, there is a pre-built binary, to run:
+
+java -jar build/libs/dcpu.jar
 
 File>Load - will load a hex dump (see the test directory for examples)
 File>Run - will run the emulation. A trace of the CPU running is written to sysout.
+File>Assemble - will assemble a file and put the resulting .hex file in the same directory as the asm file
 
 TODO:
- * Move the trace to a CPU status pane in the application
- * Add a step/breakpoint while running.
+ * Add a breakpoint while running.
  * Assembler to produce a listing file
- * Add keyboard support
+ * Add keyboard support that works
  * Add floppy disk support (when there are some more details)
- * Get the cpu cycle time to match the real processor.
- * Write a FORTH interpreter
+ * Get the cpu cycle time to match the "real" processor.
+ * Better error handling

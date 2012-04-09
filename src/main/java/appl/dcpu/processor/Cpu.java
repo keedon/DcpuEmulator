@@ -5,10 +5,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-import org.apache.commons.io.IOUtils;
-
 import appl.dcpu.frontend.Screen;
 import appl.dcpu.utility.Disassembler;
+import appl.dcpu.utility.IOUtils;
 
 public class Cpu implements Runnable {
 	private static final int SCREEN_ADDRESS = 0x8000;
