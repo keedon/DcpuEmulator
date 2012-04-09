@@ -6,9 +6,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 
-import javax.swing.BorderFactory;
 import javax.swing.JPanel;
-import javax.swing.border.BevelBorder;
 
 public class Screen extends JPanel {
 
@@ -42,10 +40,9 @@ public class Screen extends JPanel {
 	private int charHeight;
 
 	public Screen() {
-		setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
 		font = new Font("Courier", Font.PLAIN, 14);
 		this.setFont(font);
-		setPreferredSize(new Dimension(700, 500));
+		setPreferredSize(new Dimension(500, 500));
 	}
 	
 	public void setMem(int pos, int ch) {

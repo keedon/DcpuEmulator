@@ -1,11 +1,11 @@
 package appl.dcpu.frontend;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -14,6 +14,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -21,13 +23,15 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.border.TitledBorder;
 
 import org.apache.commons.io.IOUtils;
 
 import appl.dcpu.processor.Cpu;
 import appl.dcpu.utility.Assembler;
 
-public class FrontendPanel extends JFrame implements ActionListener {
+public class FrontendPanel extends JFrame implements ActionListener, KeyListener {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -38,17 +42,26 @@ public class FrontendPanel extends JFrame implements ActionListener {
 		fep.start();
 	}
 
-	private JPanel mainFrame;
 	private Screen screen;
 	private CpuStatus cpuStatus;
 	private Container content;
 	private JMenuBar menuBar;
 	private Cpu cpu;
+	private JTextField keyboardBuffer;
+
+	private byte[] ringBuffer = new byte[16];
+	private int position = 0;
+
+	private JPanel upper;
+
+	private MemoryDump memoryDump;
 
 	private void start() {
 		createFrame();
 		addScreen();
+		addKeyboard();
 		createProcessor();
+		addMemoryDump();
 		addMenu();
 		addCpuStatus();
 		setPreferredSize(new Dimension(1024, 768));
@@ -57,18 +70,31 @@ public class FrontendPanel extends JFrame implements ActionListener {
 	    drawBootMessage();
 	}
 
+	private void addMemoryDump() {
+		memoryDump = new MemoryDump(cpu);
+		upper.add(memoryDump);
+	}
+
+	private void addKeyboard() {
+		addKeyListener(this);
+		keyboardBuffer = new JTextField();
+		keyboardBuffer.setMinimumSize(new Dimension(100, 20));
+		keyboardBuffer.setBorder(new TitledBorder("Keyboard Input"));
+		keyboardBuffer.setText("                ");
+		keyboardBuffer.addKeyListener(this);
+		content.add(keyboardBuffer);
+	}
+
 	private void createProcessor() {
-		cpu = new Cpu(screen);
+		cpu = new Cpu(screen, ringBuffer);
 	}
 
 	private void createFrame() {
 		content = getContentPane();
-	    content.setLayout(new BorderLayout());
-		mainFrame = new JPanel();
-		mainFrame.setBackground(Color.lightGray);
-		mainFrame.setLayout(new BorderLayout());
-		mainFrame.setVisible(true);
-		content.add(mainFrame, BorderLayout.CENTER);
+	    content.setLayout(new BoxLayout(content, BoxLayout.PAGE_AXIS));
+	    upper = new JPanel();
+	    upper.setLayout(new BoxLayout(upper, BoxLayout.LINE_AXIS));
+	    content.add(upper);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		try {
 			fc.setCurrentDirectory(new File(new File(".").getCanonicalPath()));
@@ -94,8 +120,8 @@ public class FrontendPanel extends JFrame implements ActionListener {
 	}
 
 	private void addCpuStatus() {
-		cpuStatus = new CpuStatus(cpu);
-		content.add(cpuStatus, BorderLayout.SOUTH);
+		cpuStatus = new CpuStatus(cpu, memoryDump);
+		content.add(cpuStatus);
 	}
 
 	private void drawBootMessage() {
@@ -106,8 +132,11 @@ public class FrontendPanel extends JFrame implements ActionListener {
 	}
 
 	private void addScreen() {
+		JPanel screenHolder = new JPanel();
+		screenHolder.setBorder(BorderFactory.createTitledBorder("Screen"));
 		screen = new Screen();
-	    content.add(screen, BorderLayout.CENTER);
+		screenHolder.add(screen);
+		upper.add(screenHolder);
 	}
 
 	@Override
@@ -118,6 +147,7 @@ public class FrontendPanel extends JFrame implements ActionListener {
 				cpu.loadFile(dumpFile);
 			}
 			cpu.reset();
+			cpuStatus.cpuLoaded();
 		}
 		if (e.getActionCommand().equals("Run")) {
 			cpu.start();
@@ -161,5 +191,20 @@ public class FrontendPanel extends JFrame implements ActionListener {
 		} finally {
 			IOUtils.closeQuietly(br);
 		}
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		ringBuffer[position] = (byte) e.getKeyChar();
+		position = (position + 1) % 16;
+		keyboardBuffer.setText(new String(ringBuffer));
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
 	}
 }

@@ -6,31 +6,35 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
 
 import appl.dcpu.frontend.Screen;
+import appl.dcpu.utility.Disassembler;
 
 public class Cpu implements Runnable {
 	private static final int SCREEN_ADDRESS = 0x8000;
 	private static final int MEM_SIZE = 65536;
 	private static final int MAX_INT = 32767;
 	private static final int MIN_INT = -32768;
+	private static final int KEYBOARD_ADDRESS = 0x9000;
 	
-	Thread cpuThread = null;
-	private transient boolean stopCpu;
-	private transient int[] memory;
+	private Thread cpuThread = null;
+	private boolean stopCpu;
+	private int[] memory;
 	private int[] registers;
 	private int PC;
 	private int SP;
 	private int O;
 	private boolean skip = false;
-	private transient final Screen screen;
+	private final Screen screen;
+	private final byte[] ringBuffer;
+	private Disassembler disassembler;
 	
-	public Cpu(Screen screen) {
+	public Cpu(Screen screen, byte[] ringBuffer) {
 		this.screen = screen;
+		this.ringBuffer = ringBuffer;
 		memory = new int[MEM_SIZE];
 		registers =  new int[8];
+		disassembler = new Disassembler();
 	}
 
 	public void loadFile(File dumpFile) {
@@ -68,12 +72,19 @@ public class Cpu implements Runnable {
 		cpuThread = new Thread(this);
 		cpuThread.start();
 	}
+	public void stop() {
+		try {
+			stopCpu = true;
+			cpuThread.join(0);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Override
 	public void run() {
 		while(!stopCpu) {
 			step();
-			System.out.println(this);
 		}
 	}
 	
@@ -91,7 +102,6 @@ public class Cpu implements Runnable {
 		if (addressModeNeedsNextWord(b)) {
 			ebNext = PC++;
 		}
-		System.out.println(String.format("word=%04x, op=%x, a=%x, aNext=%x, b=%x, bNext=%x", inst, op, a, eaNext, b, ebNext));
 		if (skip) {
 			skip = false;
 		} else {
@@ -285,6 +295,9 @@ public class Cpu implements Runnable {
 		if (addr >= SCREEN_ADDRESS && addr <= (SCREEN_ADDRESS + 960)) {
 			return screen.getMem(addr - SCREEN_ADDRESS);
 		}
+		if (addr >= KEYBOARD_ADDRESS && (addr <  KEYBOARD_ADDRESS + ringBuffer.length)) {
+			return ringBuffer[addr - KEYBOARD_ADDRESS];
+		}
 		return memory[addr];
 	}
 
@@ -294,14 +307,24 @@ public class Cpu implements Runnable {
 	
 	private void setMem(int addr, int val) {
 		addr = wrapMemory(addr);
-		if (addr >= SCREEN_ADDRESS && addr <= (SCREEN_ADDRESS + 960)) {
+		if (addr >= SCREEN_ADDRESS && addr <= (SCREEN_ADDRESS + 959)) {
 			screen.setMem(addr - SCREEN_ADDRESS, val);
 		}
 		memory[addr] = val;
 	}
 	
 	public String toString() {
-		return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE, false);
+		return String.format("A=%04x B=%04x C=%04x X=%04x Y=%04x Z=%04x I=%04x J=%04x PC=%04x SP=%04x O=%04x Skip=%s, next=%s",
+				registers[0], registers[1], registers[2], registers[3], registers[4], registers[5], registers[6], registers[7], PC, SP, O, skip,
+				disassembler.disassemble(memory, PC).line);
+	}
+
+	public boolean isRunning() {
+		return cpuThread != null && stopCpu == false;
+	}
+
+	public int getWordAt(int i) {
+		return getMem(i);
 	}
 
 }
