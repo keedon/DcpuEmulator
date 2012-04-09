@@ -9,6 +9,16 @@ import java.util.List;
 import java.util.Map;
 
 public class Assembler {
+	public class AssemblyResult {
+		public final String hexResult;
+		public final String listing;
+		
+		public AssemblyResult(String hex, String listing) {
+			hexResult = hex;
+			this.listing = listing;
+		}
+	}
+
 	private static final String REGISTERS = "abcxyzij";
 	private static final Map<String, Integer> opCodes = new HashMap<String, Integer>();
     static {
@@ -35,22 +45,27 @@ public class Assembler {
 	private StreamTokenizer tokeniser;
 	private final String program;
 	private int currentPC;
+	private StringBuilder listing;
+	private String[] programForListing;
 	
 	public Assembler(String program) {
 		this.program = program;
+		programForListing = program.split("\n");
 		labelDictionary = new HashMap<String, Integer>();
 	}
 	
-	public String assemble() {
+	public AssemblyResult assemble() {
 		try {
 			// Pass 1
+			listing = new StringBuilder();
 			currentPC = 0;
 			createTokeniser();
 			runPass();
 			// Pass 2
+			listing = new StringBuilder();
 			currentPC = 0;
 			createTokeniser();
-			return runPass();
+			return new AssemblyResult(runPass(), listing.toString());
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -60,18 +75,34 @@ public class Assembler {
 		List<String> result = new ArrayList<String>();
 		tokeniser.nextToken();
 		while (tokeniser.ttype != StreamTokenizer.TT_EOF) {
-			if (tokeniser.ttype == StreamTokenizer.TT_EOL) {
+			try {
+				if (tokeniser.ttype == StreamTokenizer.TT_EOL) {
+					tokeniser.nextToken();
+					continue;
+				}
+				int beforePC = currentPC;
+				String currentLine = programForListing[tokeniser.lineno() - 1];
+				if (tokenAsString().equals(":")) {
+					labelDefinition();
+				} else {
+					if (tokeniser.ttype != StreamTokenizer.TT_EOF) {
+						processOpcode(result);
+					}
+					listing.append('\n').append(toHex(beforePC)).append(": ");
+					for (int i = beforePC; i < currentPC; i++) {
+						listing.append(result.get(i)).append(' ');
+					}
+					listing.append('\t').append(currentLine);
+				}
 				tokeniser.nextToken();
-				continue;
-			}
-			if (tokenAsString().equals(":")) {
-				labelDefinition();
-			} else {
-				if (tokeniser.ttype != StreamTokenizer.TT_EOF) {
-					processOpcode(result);
+			} catch (RuntimeException e) {
+				listing.append('\n');
+				listing.append(programForListing[tokeniser.lineno() - 1]).append('\n');
+				listing.append("*** ").append(e.getMessage());
+				while (tokeniser.ttype != StreamTokenizer.TT_EOL && tokeniser.ttype != StreamTokenizer.TT_EOF) {
+					tokeniser.nextToken();
 				}
 			}
-			tokeniser.nextToken();
 		}
 		return asString(result);
 	}
@@ -113,7 +144,7 @@ public class Assembler {
 					result.add(toHex(labelDictionary.get(tokenAsString())));
 					currentPC++;
 				} else {
-					// Add a zero
+					// Add a zero - assume we're in pass 1
 					result.add("0000");
 					currentPC++;
 				}
@@ -200,7 +231,7 @@ public class Assembler {
 		if (tokenAsString().startsWith("[")) {
 			return processIndirect(result);
 		}
-		return 0;
+		throw new RuntimeException("Unable to parse argument " + tokeniser);
 	}
 
 	private int processLiteral(List<String> result, int value) {

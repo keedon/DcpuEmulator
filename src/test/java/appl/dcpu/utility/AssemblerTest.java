@@ -2,14 +2,16 @@ package appl.dcpu.utility;
 
 import org.junit.Test;
 
+import appl.dcpu.utility.Assembler.AssemblyResult;
+
 public class AssemblerTest {
 
 	private static final String PROGRAM1 = "; Try some basic stuff\n" +
 "              SET A, 0x30              ; 7c01 0030\n" +
-"              SET [0x1000], 0x20       ; 7de1 1000 0020\n" +
+"              SEN [0x1000], 0x20       ; 7de1 1000 0020\n" +
 "              SUB A, [0x1000]          ; 7803 1000\n" +
 "              IFN A, 0x10              ; c00d \n" +
-"                 SET PC, crash         ; 7dc1 001a [*]\n" +
+"                 SET PC,          ; 7dc1 001a [*]\n" +
 "              \n" +
 "; Do a loopy thing\n" +
 "              SET I, 10                ; a861\n" +
@@ -36,7 +38,8 @@ public class AssemblerTest {
 	@Test
 	public void runAssembler() {
 		Assembler asm = new Assembler(PROGRAM1);
-		String code = asm.assemble();
-		System.out.println(code);
+		AssemblyResult code = asm.assemble();
+		System.out.println(code.hexResult);
+		System.out.println(code.listing);
 	}
 }

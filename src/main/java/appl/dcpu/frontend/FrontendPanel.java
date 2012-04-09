@@ -28,6 +28,7 @@ import javax.swing.border.TitledBorder;
 
 import appl.dcpu.processor.Cpu;
 import appl.dcpu.utility.Assembler;
+import appl.dcpu.utility.Assembler.AssemblyResult;
 import appl.dcpu.utility.IOUtils;
 
 public class FrontendPanel extends JFrame implements ActionListener, KeyListener {
@@ -155,9 +156,11 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 			if (JFileChooser.APPROVE_OPTION == fc.showOpenDialog(this)) {
 				File sourceFile = fc.getSelectedFile();
 				Assembler asm = new Assembler(loadFile(sourceFile));
-				String assembledCode = asm.assemble();
+				AssemblyResult assembledCode = asm.assemble();
 				File destFile = new File(sourceFile.getPath().replace(".asm", "") + ".hex");
-				writeFile(destFile, assembledCode);
+				writeFile(destFile, assembledCode.hexResult);
+				File listingFile = new File(sourceFile.getPath().replace(".asm", "") + ".list");
+				writeFile(listingFile, assembledCode.listing);
 				JOptionPane.showMessageDialog(this, "Assembly completed - output in " + destFile);
 			}
 		}
@@ -169,7 +172,7 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 			bw = new BufferedWriter(new FileWriter(destFile));
 			bw.write(assembledCode);
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			JOptionPane.showMessageDialog(this, "Unable to write " + destFile);
 		} finally {
 			IOUtils.closeQuietly(bw);
 		}
@@ -186,7 +189,8 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 			}
 			return sb.toString();
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			JOptionPane.showMessageDialog(this, "Couldn't load file " + sourceFile);
+			return "";
 		} finally {
 			IOUtils.closeQuietly(br);
 		}
