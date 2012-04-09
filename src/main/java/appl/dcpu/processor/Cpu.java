@@ -10,11 +10,31 @@ import appl.dcpu.utility.Disassembler;
 import appl.dcpu.utility.IOUtils;
 
 public class Cpu implements Runnable {
+	// Opcodes
+	private static final int SET = 1;
+	private static final int ADD = 2;
+	private static final int SUB = 3;
+	private static final int MUL = 4;
+	private static final int DIV = 5;
+	private static final int MOD = 6;
+	private static final int SHL = 7;
+	private static final int SHR = 8;
+	private static final int AND = 9;
+	private static final int BOR = 0xa;
+	private static final int XOR = 0xb;
+	private static final int IFE = 0xc;
+	private static final int IFN = 0xd;
+	private static final int IFG = 0xe;
+	private static final int IFB = 0xf;
+	
+	
 	private static final int SCREEN_ADDRESS = 0x8000;
+	private static final int SCREEN_SIZE = 960;
 	private static final int MEM_SIZE = 65536;
 	private static final int MAX_INT = 32767;
 	private static final int MIN_INT = -32768;
 	private static final int KEYBOARD_ADDRESS = 0x9000;
+	private static final long CYCLE_TIME_NANO = 100000000L / 100000L; 
 	
 	private Thread cpuThread = null;
 	private boolean stopCpu;
@@ -94,36 +114,41 @@ public class Cpu implements Runnable {
 		int op = inst & 15;
 		int a = (inst >> 4) & 0x3f;
 		int b = (inst >> 10) & 0x3f;
+		int numCycles = 1;
+		long start = System.nanoTime();
+		// Get the words (if needed) for the instruction
+		// now we don't have to worry about the decode order.
 		if (addressModeNeedsNextWord(a)) {
-			// Get next
 			eaNext = PC++;
+			numCycles++;
 		}
 		if (addressModeNeedsNextWord(b)) {
 			ebNext = PC++;
+			numCycles++;
 		}
 		if (skip) {
 			skip = false;
 		} else {
 			switch(op) {
-			case 1:
+			case SET:
 				setEa(a, eaNext, getEa(b, ebNext));
 				break;
-			case 2:
+			case ADD:
 				val = getEa(a, eaNext) + getEa(b, ebNext);
 				setO(val);
 				setEa(a, eaNext, val);
 				break;
-			case 3:
+			case SUB:
 				val = getEa(a, eaNext) - getEa(b, ebNext);
 				setO(val);
 				setEa(a, eaNext, val);
 				break;
-			case 4:
+			case MUL:
 				val = getEa(a, eaNext) * getEa(b, ebNext);
 				O = (val>>16) & 0xffff;
 				setEa(a, eaNext, val);
 				break;
-			case 5:
+			case DIV:
 				ea = getEa(a, eaNext);
 				eb = getEa(b, ebNext);
 				if (eb == 0) {
@@ -135,7 +160,7 @@ public class Cpu implements Runnable {
 					setEa(a, eaNext, val);
 				}
 				break;
-			case 6:
+			case MOD:
 				eb = getEa(b, ebNext);
 				if (eb == 0) {
 					setEa(a, eaNext, 0);
@@ -143,55 +168,60 @@ public class Cpu implements Runnable {
 					setEa(a, eaNext, getEa(a, eaNext) % eb);
 				}
 				break;
-			case 7:
+			case SHL:
 				eb = getEa(b, ebNext);
 				ea = getEa(a, eaNext);
 				setEa(a, eaNext, ea << eb);
 				O = ((ea<<eb)>>16) & 0xffff;
 				break;
-			case 8:
+			case SHR:
 				eb = getEa(b, ebNext);
 				ea = getEa(a, eaNext);
 				setEa(a, eaNext, ea >> eb);
 				O = ((ea<<16)>>eb)&0xffff;
 				break;
-			case 9:
+			case AND:
 				setEa(a, eaNext, getEa(a, eaNext) & getEa(b, ebNext));
 				break;
-			case 0xa:
+			case BOR:
 				setEa(a, eaNext, getEa(a, eaNext) | getEa(b, ebNext));
 				break;
-			case 0xb:
+			case XOR:
 				setEa(a, eaNext, getEa(a, eaNext) ^ getEa(b, ebNext));
 				break;
-			case 0xc:
+			case IFE:
 				skip = getEa(a, eaNext) != getEa(b, ebNext);
 				break;
-			case 0xd:
+			case IFN:
 				skip = getEa(a, eaNext) == getEa(b, ebNext);
-			case 0xe:
+			case IFG:
 				skip = getEa(a, eaNext) <= getEa(b, ebNext);
 				break;
-			case 0xf:
+			case IFB:
 				skip = (getEa(a, eaNext) & getEa(b, ebNext)) == 0;
 				break;
 			case 0:
-				nonBasic(inst, ebNext);
+				nonBasic(inst, b, ebNext);
 				break;
 			default:
 				throw new RuntimeException("Invalid opcode " + op);
 			}
 		}
 		PC = wrapMemory(PC);
+		try {
+			long timeToComplete = CYCLE_TIME_NANO - (start - System.nanoTime());
+			Thread.sleep(0L, (int)timeToComplete);
+		} catch (InterruptedException e) {
+			// Never happen
+		}
 	}
 	
 	private boolean addressModeNeedsNextWord(int mode) {
 		return (mode > 0xf && mode <= 0x17) || mode == 0x1e || mode == 0x1f;
 	}
 
-	private void nonBasic(int inst, int eaNext) {
+	private void nonBasic(int inst, int a, int eaNext) {
 		int op = (inst >> 4) & 0x3f;
-		int a = (inst >> 10) & 0x3f;
 		switch (op) {
 		case 1:
 			setMem(--SP, PC);
@@ -291,7 +321,7 @@ public class Cpu implements Runnable {
 	
 	private int getMem(int addr, boolean clearKeyboard) {
 		addr = wrapMemory(addr);
-		if (addr >= SCREEN_ADDRESS && addr <= (SCREEN_ADDRESS + 960)) {
+		if (addr >= SCREEN_ADDRESS && addr <= (SCREEN_ADDRESS + SCREEN_SIZE)) {
 			return screen.getMem(addr - SCREEN_ADDRESS);
 		}
 		if (addr >= KEYBOARD_ADDRESS && (addr <  KEYBOARD_ADDRESS + ringBuffer.length)) {

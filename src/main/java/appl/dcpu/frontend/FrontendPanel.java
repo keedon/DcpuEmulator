@@ -142,30 +142,38 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getActionCommand().equals("Load")) {
-			if (JFileChooser.APPROVE_OPTION == fc.showOpenDialog(this)) {
-				File dumpFile = fc.getSelectedFile();
-				cpu.loadFile(dumpFile);
-			}
-			cpu.reset();
-			cpuStatus.cpuLoaded();
+			loadHexFile();
 		}
 		if (e.getActionCommand().equals("Run")) {
 			cpu.start();
 		}
 		if (e.getActionCommand().equals("Assemble")) {
-			if (JFileChooser.APPROVE_OPTION == fc.showOpenDialog(this)) {
-				File sourceFile = fc.getSelectedFile();
-				Assembler asm = new Assembler(loadFile(sourceFile));
-				AssemblyResult assembledCode = asm.assemble();
-				File listingFile = new File(sourceFile.getPath().replace(".asm", "") + ".list");
-				writeFile(listingFile, assembledCode.listing);
-				if (assembledCode.success) {
-					File destFile = new File(sourceFile.getPath().replace(".asm", "") + ".hex");
-					writeFile(destFile, assembledCode.hexResult);
-					JOptionPane.showMessageDialog(this, "Assembly completed - output in " + destFile);
-				} else {
-					JOptionPane.showMessageDialog(this, "Assembly failed - see " + listingFile);
-				}
+			runAssembler();
+		}
+	}
+
+	private void loadHexFile() {
+		if (JFileChooser.APPROVE_OPTION == fc.showOpenDialog(this)) {
+			File dumpFile = fc.getSelectedFile();
+			cpu.loadFile(dumpFile);
+		}
+		cpu.reset();
+		cpuStatus.cpuLoaded();
+	}
+
+	private void runAssembler() {
+		if (JFileChooser.APPROVE_OPTION == fc.showOpenDialog(this)) {
+			File sourceFile = fc.getSelectedFile();
+			Assembler asm = new Assembler(loadFile(sourceFile));
+			AssemblyResult assembledCode = asm.assemble();
+			File listingFile = new File(sourceFile.getPath().replace(".asm", "") + ".list");
+			writeFile(listingFile, assembledCode.listing);
+			if (assembledCode.success) {
+				File destFile = new File(sourceFile.getPath().replace(".asm", "") + ".hex");
+				writeFile(destFile, assembledCode.hexResult);
+				JOptionPane.showMessageDialog(this, "Assembly completed - output in " + destFile);
+			} else {
+				JOptionPane.showMessageDialog(this, "Assembly failed - see " + listingFile);
 			}
 		}
 	}
