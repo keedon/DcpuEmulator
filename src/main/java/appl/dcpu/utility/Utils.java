@@ -7,7 +7,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class IOUtils {
+public class Utils {
 
 	public static List<String> readLines(BufferedReader br) throws IOException {
 		List<String> result = new ArrayList<String>();
@@ -35,6 +35,14 @@ public class IOUtils {
 			}
 		} catch (IOException e) {
 			
-		}	}
+		}	
+	}
+	
+	public static int fromHex(String text) {
+		if (text.startsWith("0x") || text.startsWith("0X")) {
+			return Integer.parseInt(text.substring(2), 16);
+		}
+		return Integer.parseInt(text);
+	}
 
 }

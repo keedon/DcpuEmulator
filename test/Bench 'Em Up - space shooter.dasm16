@@ -1,0 +1,412 @@
+; Bench 'Em Up: a side-scrolling space shooter to benchmark DCPU drawing
+; originally programmed by Soron
+; free for anyone to use, share, modify and remix
+; tested in DCPU-16 Studio
+
+
+; Instructions:
+; Avoid the asteroids! If you hit one from the left, its momentum will
+; blast a hole in your ship. If you hit it from the top or bottom, your
+; shields will vaporize it harmlessly. Fire lasers to destroy incoming
+; asteroids!
+
+; Controls:
+; Press any key to start the game, or to restart it if you lose.
+; Up arrow moves ship up
+; Down arrow moves ship down
+; Space bar fires lasers
+
+
+; the reason I coded this game is to test the DCPU's full-screen drawing speed
+; I was aiming for 12 FPS as a target speed
+; after coding it, I found out that I needed to slow things DOWN to ~15 FPS
+; if I didn't do that, the game wasn't playable
+; note, btw, that I'm using a 4608 cycle loop to slow things down, so there's
+; a LOT of additional game logic that could be added
+
+; so, the test was a solid success, I'd say.
+
+
+; note that the fullscreen drawing method I used does introduce some flicker.
+; Namely, anything that's moving the opposite direction (namely, the player)
+; ends up flickering a bit. One solution is to unroll the drawing loop fully,
+; and modify the problematic copy instructions in order to produce a
+; "dead zone" on the screen, movement-wise. You'll have to modify it at
+; runtime, however. Although, you'd also be able to set up two different
+; movement directions that way, if you were careful.
+; Another method would be to just switch OFF of full-screen drawing, because
+; that's what's causing the problem in the first place. However, to test the
+; DCPU's capabilities, I deliberately chose to avoid that solution.
+
+
+; minimum target speed: 12 FPS (at 100KHz)
+
+; libraries used:
+; Entroper's 32-bit LCG, as the game's PRNG (https://github.com/Entroper/DCPU-16-PRNGs)
+
+:init
+	SET PUSH, A
+	SET PUSH, B
+	SET PUSH, C
+	SET PUSH, X
+	SET PUSH, Y
+	SET PUSH, Z
+	SET PUSH, I
+	SET PUSH, J
+	SET J, SP
+	
+	SET PC, run_game
+
+:exit
+	SET SP, J
+	SET J, POP
+	SET I, POP
+	SET Z, POP
+	SET Y, POP
+	SET X, POP
+	SET C, POP
+	SET B, POP
+	SET A, POP
+	SET PC, POP
+	
+	
+:delay_time
+	DAT 0x0300 ; I count 6 cycles per delay loop
+
+
+:run_game
+	SET A, [0x9000]
+	IFE A, 0
+		SET PC, run_game
+	SET [player_x], 3
+	SET [player_y], 8
+	JSR clear_screen
+	JSR toggle_player_sprite
+
+:game_loop
+	JSR rand
+	MOD A, 0x0020
+	MUL A, 0x0020
+	SET X, 0x7FFF
+	SUB X, A
+	SET [X], [asteroid_tile]
+	JSR scroll_screen_right
+	SET [X], 0
+	JSR handle_game_logic
+	JSR delay
+	SET PC, game_loop
+	
+
+; uses an XOR, so it's reversible
+; clobbers A
+
+:toggle_player_sprite
+	SET A, [player_y]
+	MUL A, 0x0020
+	ADD A, [player_x]
+	ADD A, 0x8000
+	XOR [A], [player_nose_color]
+	SUB A, 1
+	XOR [A], [player_body_color]
+	SUB A, 1
+	XOR [A], [player_body_color]
+	SUB A, 0x0020
+	XOR [A], [player_body_color]
+	SET PC, POP
+
+:handle_game_logic
+	JSR move_player_right ; do this AS SOON AS POSSIBLE to avoid flickering
+	JSR move_lasers
+	
+	SET A, [0x9000] ; get the current key
+	SET [0x9000], 0
+	IFE A, [key_up]
+		JSR try_move_up
+	IFE A, [key_down]
+		JSR try_move_down
+	IFE A, [key_space]
+		JSR fire_lasers
+	SET PC, POP
+
+:try_move_up
+	IFG [player_y], 1
+		JSR move_player_up
+	SET PC, POP
+
+:try_move_down
+	IFG 15, [player_y]
+		JSR move_player_down
+	SET PC, POP
+
+:move_player_up
+	SUB [player_y], 1
+	SET A, [player_y]
+	MUL A, 0x0020
+	ADD A, [player_x]
+	ADD A, 0x8000
+	SET [A], [0x0020+A]
+	SET [0x0020+A], 0
+	SUB A, 1
+	SET [A], [0x0020+A]
+	SET [0x0020+A], 0
+	SUB A, 1
+	SET [A], [0x0020+A]
+	SET [0x0020+A], 0
+	SUB A, 0x0020
+	SET [A], [0x0020+A]
+	SET PC, POP
+
+:move_player_down
+	SET A, [player_y]
+	MUL A, 0x0020
+	ADD A, [player_x]
+	ADD A, 0x8000
+	SET [0x0020+A], [A]
+	SET [A], 0
+	SUB A, 1
+	SET [0x0020+A], [A]
+	SET [A], 0
+	SUB A, 1
+	SET [0x0020+A], [A]
+	SET [A], 0
+	SUB A, 0x0020
+	SET [0x0020+A], [A]
+	SET [A], 0
+	ADD [player_y], 1
+	SET PC, POP
+
+:move_player_right
+	SET A, [player_y]
+	MUL A, 0x0020
+	ADD A, [player_x]
+	ADD A, 0x8000
+	SUB A, 1
+	IFE [1+A], [asteroid_tile]
+		SET PC, lose
+	SET [1+A], [A]
+	SUB A, 1
+	SET [1+A], [A]
+	SUB A, 1
+	SET [1+A], [A]
+	SET [A], 0
+	SUB A, 0x0020
+	IFE [1+A], [asteroid_tile]
+		SET PC, lose
+	SET [1+A], [A]
+	SET [A], 0
+	SET PC, POP
+
+
+:fire_lasers
+	IFG [laser_count], 3
+		SET PC, POP
+	SET A, lasers
+	ADD A, [laser_count]
+	SET B, [player_y]
+	MUL B, 0x0020
+	ADD B, [player_x]
+	ADD B, 2
+	ADD B, 0x8000
+	SET [B], [laser_tile]
+	SET [A], B
+	ADD B, 1
+	SET [B], [laser_tile]
+	ADD [laser_count], 1
+	SET PC, POP
+
+:move_lasers
+	SET A, [laser_count]
+	SET B, lasers
+:move_laser_loop
+	IFE A, 0
+		SET PC, POP
+	SUB A, 1
+	SET C, [B]
+	SET X, C
+	SUB X, 0x8000
+	MOD X, 32
+	IFG X, 29
+		SET PC, fizzle_laser ; moved off screen
+	SET [C], 0
+	SUB C, 1
+	SET [C], 0
+	IFN [2+C], 0
+		SET PC, laser_blast
+	IFN [3+C], 0
+		SET PC, laser_blast
+	SET [2+C], [laser_tile]
+	SET [3+C], [laser_tile]
+	ADD [B], 1
+	ADD B, 1 ; intentionally skip this on a blast or fizzle
+	SET PC, move_laser_loop
+
+:laser_blast
+	SET [2+C], 0
+	SET [3+C], 0
+	SET PC, kill_laser
+
+:fizzle_laser
+	SET [C], 0
+	SUB C, 1
+	SET [C], 0
+	SET PC, kill_laser
+
+:kill_laser
+	SUB [laser_count], 1
+	SET [B], [1+B]   ; we don't really CARE if these are junk values
+	SET [1+B], [2+B] ; since we know where the end of the array is
+	SET [2+B], [3+B]
+	SET PC, move_laser_loop
+
+:lose
+	SET PC, run_game
+
+:hang
+
+:delay
+	SET A, 0
+	SET B, [delay_time]
+:delay_loop
+	IFG A, B
+		SET PC, POP
+	ADD A, 1
+	SET PC, delay_loop
+
+
+:clear_screen
+	SET A, SP
+	SET SP, 0x8000
+:clear_screen_loop
+	SET POP, 0
+	IFG 0x8200, SP
+		SET PC, clear_screen_loop
+	SET SP, A
+	SET PC, POP
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;            SCREEN DRAWING CODE            ;
+; this is the part y'all wanted to optimize ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; takes no inputs
+; assumes that the 33rd column of tiles (off-screen) will be at (A-0x1E1),
+; where A is start-of-screen-row
+; e.g., the bottom-right tile of a 32x16 display gets the value stored at 0x7FFF
+; note that -0x1E1 is 0xFE1F
+
+; clobbers A, B, C
+
+; remember, we're aiming at 12 FPS here
+; for a 32x16 screen, that means each pixel/tile gets at most 16 cycles to update
+; using 512 cycles per row as a benchmark also works
+:scroll_screen_right
+	SET A, 0x8000 ; this is where we're writing to
+	SET B, 0x0020 ; row offset (stored in a register to save cycles)
+	SET C, 0x8200 ; endpoint
+:scroll_screen_right_loop
+	SET [A], [1+A] ; 1 + 0 + 1 = 2 cycles
+	SET [1+A], [2+A] ; 1 + 1 + 1 = 3 cycles
+	SET [2+A], [3+A] ; 3 cycles
+	SET [3+A], [4+A] ; 3 cycles
+	SET [4+A], [5+A] ; 3 cycles
+	SET [5+A], [6+A] ; 3 cycles
+	SET [6+A], [7+A] ; 3 cycles
+	SET [7+A], [8+A] ; 3 cycles
+	SET [8+A], [9+A] ; 3 cycles
+	SET [9+A], [10+A] ; 3 cycles
+	SET [10+A], [11+A] ; 3 cycles
+	SET [11+A], [12+A] ; 3 cycles
+	SET [12+A], [13+A] ; 3 cycles
+	SET [13+A], [14+A] ; 3 cycles
+	SET [14+A], [15+A] ; 3 cycles
+	SET [15+A], [16+A] ; 3 cycles
+	SET [16+A], [17+A] ; 3 cycles
+	SET [17+A], [18+A] ; 3 cycles
+	SET [18+A], [19+A] ; 3 cycles
+	SET [19+A], [20+A] ; 3 cycles
+	SET [20+A], [21+A] ; 3 cycles
+	SET [21+A], [22+A] ; 3 cycles
+	SET [22+A], [23+A] ; 3 cycles
+	SET [23+A], [24+A] ; 3 cycles
+	SET [24+A], [25+A] ; 3 cycles
+	SET [25+A], [26+A] ; 3 cycles
+	SET [26+A], [27+A] ; 3 cycles
+	SET [27+A], [28+A] ; 3 cycles
+	SET [28+A], [29+A] ; 3 cycles
+	SET [29+A], [30+A] ; 3 cycles
+	SET [30+A], [31+A] ; 3 cycles
+	SET [31+A], [0xFE1F+A] ; 3 cycles
+	ADD A, B ; 2 + 0 + 0 = 2 cycles
+	IFG C, A ; 2 for IFG, plus 0, plus 0 = 2 cycles
+		SET PC, scroll_screen_right_loop ; 1 + 0 + 1 = 2 cycles
+
+; total cycle count: 31*3 + 4*2 = 101 cycles
+; we allowed ourselves 512 per row, I think we're in good shape
+
+:exit_scroll_screen_right
+	SET PC, POP
+	
+:player_x
+	DAT 0x0000
+:player_y
+	DAT 0x0000
+
+:player_nose_color
+	DAT 0x0C00
+:player_body_color
+	DAT 0x0F00
+
+:asteroid_tile
+	DAT 0xE02A
+
+:laser_tile
+	DAT 0xD03D
+
+:key_up
+	DAT 0x0003
+:key_down
+	DAT 0x0004
+:key_left
+	DAT 0x0001
+:key_right
+	DAT 0x0002
+:key_space
+	DAT 0x0020
+
+:laser_count
+	DAT 0x0000 ; max of 4
+:lasers
+	DAT 0x0000
+	DAT 0x0000
+	DAT 0x0000
+	DAT 0x0000
+	
+
+
+; Linear congruential generator
+; Generates random words, using two words of state.
+; Based on the algorithm described here:
+; http://6502.org/source/integers/random/random.html
+
+; To seed the generator, simply overwrite the data in randseed.
+:randseed1 dat 0x5678 ; these were one line originally
+:randseed2 dat 0x1234 ; but DCPU-16 Studio didn't like that
+
+; Sets A to a 16-bit PRN.
+:rand
+	; 0x0019660D x seed + 1
+	SET B, [randseed1]
+	SET A, [randseed2]
+	MUL [randseed1], 0x660D
+	SET C, O
+	MUL A, 0x660D
+	ADD A, C
+	MUL B, 0x0019
+	ADD A, B
+	ADD [randseed1], 1
+	ADD A, O
+	SET [randseed2], A
+	SET PC, POP

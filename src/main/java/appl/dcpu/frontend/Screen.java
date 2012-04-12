@@ -11,8 +11,8 @@ import javax.swing.JPanel;
 public class Screen extends JPanel {
 
 	private static final long serialVersionUID = 1L;
-	private static final int SCREEN_WIDTH = 40;
-	private static final int SCREEN_HEIGHT = 24;
+	public static final int SCREEN_WIDTH = 32;
+	public static final int SCREEN_HEIGHT = 16;
 	
 	private static final Color BLACK = new Color(0x000000);
 	private static final Color RED = new Color(0x883932);

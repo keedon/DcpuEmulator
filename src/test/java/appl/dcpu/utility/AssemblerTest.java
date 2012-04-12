@@ -1,5 +1,9 @@
 package appl.dcpu.utility;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+
 import org.junit.Test;
 
 import appl.dcpu.utility.Assembler.AssemblyResult;
@@ -38,6 +42,23 @@ public class AssemblerTest {
 	@Test
 	public void runAssembler() {
 		Assembler asm = new Assembler(PROGRAM1);
+		runAssembler(asm);
+	}
+	
+	@Test
+	public void assembleBigProgram() throws Exception {
+		File bigProgram = new File("test/Bench 'Em Up - space shooter.dasm16");
+		BufferedReader pgmReader = new BufferedReader(new FileReader(bigProgram));
+		StringBuilder pgm = new StringBuilder();
+		String line;
+		while ((line = pgmReader.readLine()) != null) {
+			pgm.append(line).append('\n');
+		}
+		Assembler asm = new Assembler(pgm.toString());
+		runAssembler(asm);
+	}
+	
+	private void runAssembler(Assembler asm) {
 		AssemblyResult code = asm.assemble();
 		System.out.println(code.hexResult);
 		System.out.println(code.listing);

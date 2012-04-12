@@ -29,7 +29,7 @@ import javax.swing.border.TitledBorder;
 import appl.dcpu.processor.Cpu;
 import appl.dcpu.utility.Assembler;
 import appl.dcpu.utility.Assembler.AssemblyResult;
-import appl.dcpu.utility.IOUtils;
+import appl.dcpu.utility.Utils;
 
 public class FrontendPanel extends JFrame implements ActionListener, KeyListener {
 
@@ -109,9 +109,6 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 		JMenuItem loadAction = new JMenuItem("Load");
 		loadAction.addActionListener(this);
 		fileMenu.add(loadAction );
-		JMenuItem runAction = new JMenuItem("Run");
-		runAction.addActionListener(this);
-		fileMenu.add(runAction);
 		JMenuItem assembleAction = new JMenuItem("Assemble");
 		assembleAction.addActionListener(this);
 		fileMenu.add(assembleAction);
@@ -125,7 +122,7 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 	}
 
 	private void drawBootMessage() {
-		String message = "****** DCPU Emulator Booted V0.1 ******";
+		String message = "** DCPU Emulator Booted V0.1 **";
 		for (int i = 0; i< message.length(); i++) {
 			screen.setMem(i, message.charAt(i) + 0x6380);
 		}
@@ -143,9 +140,6 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 	public void actionPerformed(ActionEvent e) {
 		if (e.getActionCommand().equals("Load")) {
 			loadHexFile();
-		}
-		if (e.getActionCommand().equals("Run")) {
-			cpu.start();
 		}
 		if (e.getActionCommand().equals("Assemble")) {
 			runAssembler();
@@ -186,7 +180,7 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(this, "Unable to write " + destFile);
 		} finally {
-			IOUtils.closeQuietly(bw);
+			Utils.closeQuietly(bw);
 		}
 	}
 
@@ -195,7 +189,7 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 		try {
 			br = new BufferedReader(new FileReader(sourceFile));
 			StringBuilder sb = new StringBuilder();
-			List<String> lines = IOUtils.readLines(br);
+			List<String> lines = Utils.readLines(br);
 			for (String line : lines) {
 				sb.append(line).append('\n');	
 			}
@@ -204,7 +198,7 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 			JOptionPane.showMessageDialog(this, "Couldn't load file " + sourceFile);
 			return "";
 		} finally {
-			IOUtils.closeQuietly(br);
+			Utils.closeQuietly(br);
 		}
 	}
 

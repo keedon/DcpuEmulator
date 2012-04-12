@@ -12,6 +12,7 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import appl.dcpu.processor.Cpu;
+import appl.dcpu.utility.Utils;
 
 public class MemoryDump extends JPanel implements ActionListener {
 
@@ -39,8 +40,8 @@ public class MemoryDump extends JPanel implements ActionListener {
 	}
 
 	public void setDump() {
-		int startAddress = fromHex(address.getText());
-		dumpArea.setText("");
+		int startAddress = Utils.fromHex(address.getText());
+		StringBuilder sb = new StringBuilder();
 		// 32 lines of 8 words
 		for (int i = 0; i < 32; i++) {
 			StringBuffer hex = new StringBuffer();
@@ -53,10 +54,11 @@ public class MemoryDump extends JPanel implements ActionListener {
 				addCharacter(characters, word);
 			}
 			characters.append("*");
-			dumpArea.append(hex.toString());
-			dumpArea.append(characters.toString());
-			dumpArea.append("\n");
+			sb.append(hex.toString());
+			sb.append(characters.toString());
+			sb.append("\n");
 		}
+		dumpArea.setText(sb.toString());
 	}
 
 	private void addCharacter(StringBuffer characters, int word) {
@@ -66,13 +68,6 @@ public class MemoryDump extends JPanel implements ActionListener {
 		} else {
 			characters.append('.');
 		}
-	}
-
-	private int fromHex(String text) {
-		if (text.startsWith("0x") || text.startsWith("0X")) {
-			return Integer.parseInt(text.substring(2), 16);
-		}
-		return Integer.parseInt(text);
 	}
 
 	@Override

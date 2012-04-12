@@ -7,7 +7,7 @@ import java.io.IOException;
 
 import appl.dcpu.frontend.Screen;
 import appl.dcpu.utility.Disassembler;
-import appl.dcpu.utility.IOUtils;
+import appl.dcpu.utility.Utils;
 
 public class Cpu implements Runnable {
 	// Opcodes
@@ -47,6 +47,7 @@ public class Cpu implements Runnable {
 	private final Screen screen;
 	private final byte[] ringBuffer;
 	private Disassembler disassembler;
+	private long stopAddress;
 	
 	public Cpu(Screen screen, byte[] ringBuffer) {
 		this.screen = screen;
@@ -71,7 +72,7 @@ public class Cpu implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
-			IOUtils.closeQuietly(reader);
+			Utils.closeQuietly(reader);
 		}
 	}
 
@@ -102,9 +103,11 @@ public class Cpu implements Runnable {
 
 	@Override
 	public void run() {
-		while(!stopCpu) {
+		stopCpu = false;
+		while(!stopCpu && PC != stopAddress) {
 			step();
 		}
+		stopCpu = true;
 	}
 	
 	public void step() {
@@ -208,11 +211,12 @@ public class Cpu implements Runnable {
 			}
 		}
 		PC = wrapMemory(PC);
+		long timeToComplete = CYCLE_TIME_NANO - (start - System.nanoTime());
 		try {
-			long timeToComplete = CYCLE_TIME_NANO - (start - System.nanoTime());
 			Thread.sleep(0L, (int)timeToComplete);
-		} catch (InterruptedException e) {
-			// Never happen
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println(timeToComplete);
 		}
 	}
 	
@@ -290,13 +294,15 @@ public class Cpu implements Runnable {
 		}
 		switch (ea) {
 		case 0x18:
-			setMem(SP++, value);
+			setMem(SP, value);
+			SP = (SP + 1) & 0xffff;
 			break;
 		case 0x19:
 			setMem(SP, value);
 			break;
 		case 0x1a:
-			setMem(--SP, value);
+			SP = (SP - 1) & 0xffff;
+			setMem(SP, value);
 			break;
 		case 0x1b:
 			SP = value;
@@ -343,7 +349,7 @@ public class Cpu implements Runnable {
 	
 	private void setMem(int addr, int val) {
 		addr = wrapMemory(addr);
-		if (addr >= SCREEN_ADDRESS && addr <= (SCREEN_ADDRESS + 959)) {
+		if (addr >= SCREEN_ADDRESS && addr <= (SCREEN_ADDRESS + Screen.SCREEN_HEIGHT * Screen.SCREEN_WIDTH)) {
 			screen.setMem(addr - SCREEN_ADDRESS, val);
 		}
 		memory[addr] = val;
@@ -361,6 +367,10 @@ public class Cpu implements Runnable {
 
 	public int getWordAt(int i) {
 		return getMem(i, false);
+	}
+
+	public void setStopAddress(long l) {
+		this.stopAddress = l;
 	}
 
 }
