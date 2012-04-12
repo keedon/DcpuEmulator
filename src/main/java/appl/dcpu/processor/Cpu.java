@@ -197,6 +197,7 @@ public class Cpu implements Runnable {
 				break;
 			case IFN:
 				skip = getEa(a, eaNext) == getEa(b, ebNext);
+				break;
 			case IFG:
 				skip = getEa(a, eaNext) <= getEa(b, ebNext);
 				break;

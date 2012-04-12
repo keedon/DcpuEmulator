@@ -18,9 +18,6 @@ File>Run - will run the emulation. A trace of the CPU running is written to syso
 File>Assemble - will assemble a file and put the resulting .hex file in the same directory as the asm file
 
 TODO:
- * Add a breakpoint while running.
- * Assembler to produce a listing file
  * Add keyboard support that works
  * Add floppy disk support (when there are some more details)
- * Get the cpu cycle time to match the "real" processor.
  * Better error handling
