@@ -79,19 +79,19 @@
 78 0016: 7801 9000 	SET A, [0x9000]
 79 0018: 800c 	IFE A, 0
 80 0019: 7dc1 0016 		SET PC, run_game
-81 001b: 8c01 0197 	SET [player_x], 3
-82 001d: a001 0198 	SET [player_y], 8
-83 001f: 7c10 0123 	JSR clear_screen
+81 001b: 8de1 0198 	SET [player_x], 3
+82 001d: a1e1 0199 	SET [player_y], 8
+83 001f: 7c10 0124 	JSR clear_screen
 84 0021: 7c10 0037 	JSR toggle_player_sprite
 86 0023: :game_loop
 86 0023: :game_loop
-87 0023: 7c10 01a9 	JSR rand
+87 0023: 7c10 01aa 	JSR rand
 88 0025: 7c06 0020 	MOD A, 0x0020
 89 0027: 7c04 0020 	MUL A, 0x0020
 90 0029: 7c31 7fff 	SET X, 0x7FFF
 91 002b: 0033 	SUB X, A
-92 002c: 00b1 019b 	SET [X], [asteroid_tile]
-93 002e: 7c10 012d 	JSR scroll_screen_right
+92 002c: 78b1 019c 	SET [X], [asteroid_tile]
+93 002e: 7c10 012e 	JSR scroll_screen_right
 94 0030: 80b1 	SET [X], 0
 95 0031: 7c10 004c 	JSR handle_game_logic
 96 0033: 7c10 011c 	JSR delay
@@ -102,17 +102,17 @@
 101 0037: ; clobbers A
 103 0037: :toggle_player_sprite
 103 0037: :toggle_player_sprite
-104 0037: 0001 0198 	SET A, [player_y]
+104 0037: 7801 0199 	SET A, [player_y]
 105 0039: 7c04 0020 	MUL A, 0x0020
-106 003b: 0002 0197 	ADD A, [player_x]
+106 003b: 7802 0198 	ADD A, [player_x]
 107 003d: 7c02 8000 	ADD A, 0x8000
-108 003f: 008b 0199 	XOR [A], [player_nose_color]
+108 003f: 788b 019a 	XOR [A], [player_nose_color]
 109 0041: 8403 	SUB A, 1
-110 0042: 008b 019a 	XOR [A], [player_body_color]
+110 0042: 788b 019b 	XOR [A], [player_body_color]
 111 0044: 8403 	SUB A, 1
-112 0045: 008b 019a 	XOR [A], [player_body_color]
+112 0045: 788b 019b 	XOR [A], [player_body_color]
 113 0047: 7c03 0020 	SUB A, 0x0020
-114 0049: 008b 019a 	XOR [A], [player_body_color]
+114 0049: 788b 019b 	XOR [A], [player_body_color]
 115 004b: 61c1 	SET PC, POP
 117 004c: :handle_game_logic
 117 004c: :handle_game_logic
@@ -121,29 +121,29 @@
 121 0050: 	SET A, [0x9000] ; get the current key
 121 0050: 7801 9000 	SET A, [0x9000] ; get the current key
 122 0052: 81e1 9000 	SET [0x9000], 0
-123 0054: 000c 019d 	IFE A, [key_up]
+123 0054: 780c 019e 	IFE A, [key_up]
 124 0056: 7c10 0061 		JSR try_move_up
-125 0058: 000c 019e 	IFE A, [key_down]
+125 0058: 780c 019f 	IFE A, [key_down]
 126 005a: 7c10 0066 		JSR try_move_down
-127 005c: 000c 01a1 	IFE A, [key_space]
+127 005c: 780c 01a2 	IFE A, [key_space]
 128 005e: 7c10 00c5 		JSR fire_lasers
 129 0060: 61c1 	SET PC, POP
 131 0061: :try_move_up
 131 0061: :try_move_up
-132 0061: 840e 0198 	IFG [player_y], 1
+132 0061: 85ee 0199 	IFG [player_y], 1
 133 0063: 7c10 006b 		JSR move_player_up
 134 0065: 61c1 	SET PC, POP
 136 0066: :try_move_down
 136 0066: :try_move_down
-137 0066: 02fe 0198 	IFG 15, [player_y]
+137 0066: 7afe 0199 	IFG 15, [player_y]
 138 0068: 7c10 0088 		JSR move_player_down
 139 006a: 61c1 	SET PC, POP
 141 006b: :move_player_up
 141 006b: :move_player_up
-142 006b: 8403 0198 	SUB [player_y], 1
-143 006d: 0001 0198 	SET A, [player_y]
+142 006b: 85e3 0199 	SUB [player_y], 1
+143 006d: 7801 0199 	SET A, [player_y]
 144 006f: 7c04 0020 	MUL A, 0x0020
-145 0071: 0002 0197 	ADD A, [player_x]
+145 0071: 7802 0198 	ADD A, [player_x]
 146 0073: 7c02 8000 	ADD A, 0x8000
 147 0075: 4081 0020 	SET [A], [0x0020+A]
 148 0077: 8101 0020 	SET [0x0020+A], 0
@@ -158,9 +158,9 @@
 157 0087: 61c1 	SET PC, POP
 159 0088: :move_player_down
 159 0088: :move_player_down
-160 0088: 0001 0198 	SET A, [player_y]
+160 0088: 7801 0199 	SET A, [player_y]
 161 008a: 7c04 0020 	MUL A, 0x0020
-162 008c: 0002 0197 	ADD A, [player_x]
+162 008c: 7802 0198 	ADD A, [player_x]
 163 008e: 7c02 8000 	ADD A, 0x8000
 164 0090: 2101 0020 	SET [0x0020+A], [A]
 165 0092: 8081 	SET [A], 0
@@ -173,16 +173,16 @@
 172 009b: 7c03 0020 	SUB A, 0x0020
 173 009d: 2101 0020 	SET [0x0020+A], [A]
 174 009f: 8081 	SET [A], 0
-175 00a0: 8402 0198 	ADD [player_y], 1
+175 00a0: 85e2 0199 	ADD [player_y], 1
 176 00a2: 61c1 	SET PC, POP
 178 00a3: :move_player_right
 178 00a3: :move_player_right
-179 00a3: 0001 0198 	SET A, [player_y]
+179 00a3: 7801 0199 	SET A, [player_y]
 180 00a5: 7c04 0020 	MUL A, 0x0020
-181 00a7: 0002 0197 	ADD A, [player_x]
+181 00a7: 7802 0198 	ADD A, [player_x]
 182 00a9: 7c02 8000 	ADD A, 0x8000
 183 00ab: 8403 	SUB A, 1
-184 00ac: 010c 0001 019b 	IFE [1+A], [asteroid_tile]
+184 00ac: 790c 0001 019c 	IFE [1+A], [asteroid_tile]
 185 00af: 7dc1 011a 		SET PC, lose
 186 00b1: 2101 0001 	SET [1+A], [A]
 187 00b3: 8403 	SUB A, 1
@@ -191,7 +191,7 @@
 190 00b7: 2101 0001 	SET [1+A], [A]
 191 00b9: 8081 	SET [A], 0
 192 00ba: 7c03 0020 	SUB A, 0x0020
-193 00bc: 010c 0001 019b 	IFE [1+A], [asteroid_tile]
+193 00bc: 790c 0001 019c 	IFE [1+A], [asteroid_tile]
 194 00bf: 7dc1 011a 		SET PC, lose
 195 00c1: 2101 0001 	SET [1+A], [A]
 196 00c3: 8081 	SET [A], 0
@@ -199,25 +199,25 @@
 199 00c5: 
 200 00c5: :fire_lasers
 200 00c5: :fire_lasers
-201 00c5: 8c0e 01a2 	IFG [laser_count], 3
+201 00c5: 8dee 01a3 	IFG [laser_count], 3
 202 00c7: 61c1 		SET PC, POP
-203 00c8: 7c01 01a3 	SET A, lasers
-204 00ca: 0002 01a2 	ADD A, [laser_count]
-205 00cc: 0011 0198 	SET B, [player_y]
+203 00c8: 7c01 01a4 	SET A, lasers
+204 00ca: 7802 01a3 	ADD A, [laser_count]
+205 00cc: 7811 0199 	SET B, [player_y]
 206 00ce: 7c14 0020 	MUL B, 0x0020
-207 00d0: 0012 0197 	ADD B, [player_x]
+207 00d0: 7812 0198 	ADD B, [player_x]
 208 00d2: 8812 	ADD B, 2
 209 00d3: 7c12 8000 	ADD B, 0x8000
-210 00d5: 0091 019c 	SET [B], [laser_tile]
+210 00d5: 7891 019d 	SET [B], [laser_tile]
 211 00d7: 0481 	SET [A], B
 212 00d8: 8412 	ADD B, 1
-213 00d9: 0091 019c 	SET [B], [laser_tile]
-214 00db: 8402 01a2 	ADD [laser_count], 1
+213 00d9: 7891 019d 	SET [B], [laser_tile]
+214 00db: 85e2 01a3 	ADD [laser_count], 1
 215 00dd: 61c1 	SET PC, POP
 217 00de: :move_lasers
 217 00de: :move_lasers
-218 00de: 0001 01a2 	SET A, [laser_count]
-219 00e0: 7c11 01a3 	SET B, lasers
+218 00de: 7801 01a3 	SET A, [laser_count]
+219 00e0: 7c11 01a4 	SET B, lasers
 220 00e2: :move_laser_loop
 221 00e2: 800c 	IFE A, 0
 222 00e3: 61c1 		SET PC, POP
@@ -235,8 +235,8 @@
 234 00f3: 7dc1 0103 		SET PC, laser_blast
 235 00f5: 812d 0003 	IFN [3+C], 0
 236 00f7: 7dc1 0103 		SET PC, laser_blast
-237 00f9: 0121 0002 019c 	SET [2+C], [laser_tile]
-238 00fc: 0121 0003 019c 	SET [3+C], [laser_tile]
+237 00f9: 7921 0002 019d 	SET [2+C], [laser_tile]
+238 00fc: 7921 0003 019d 	SET [3+C], [laser_tile]
 239 00ff: 8492 	ADD [B], 1
 240 0100: 8412 	ADD B, 1 ; intentionally skip this on a blast or fizzle
 241 0101: 7dc1 00e2 	SET PC, move_laser_loop
@@ -253,7 +253,7 @@
 252 010c: 7dc1 010e 	SET PC, kill_laser
 254 010e: :kill_laser
 254 010e: :kill_laser
-255 010e: 8403 01a2 	SUB [laser_count], 1
+255 010e: 85e3 01a3 	SUB [laser_count], 1
 256 0110: 4491 0001 	SET [B], [1+B]   ; we don't really CARE if these are junk values
 257 0112: 4511 0001 0002 	SET [1+B], [2+B] ; since we know where the end of the array is
 258 0115: 4511 0002 0003 	SET [2+B], [3+B]
@@ -266,194 +266,194 @@
 266 011c: :delay
 266 011c: :delay
 267 011c: 8001 	SET A, 0
-268 011d: 0011 	SET B, [delay_time]
-269 011e: :delay_loop
-270 011e: 040e 	IFG A, B
-271 011f: 61c1 		SET PC, POP
-272 0120: 8402 	ADD A, 1
-273 0121: 7dc1 011e 	SET PC, delay_loop
-275 0123: 
-276 0123: :clear_screen
-276 0123: :clear_screen
-277 0123: 6c01 	SET A, SP
-278 0124: 7db1 8000 	SET SP, 0x8000
-279 0126: :clear_screen_loop
-280 0126: 8181 	SET POP, 0
-281 0127: 6dfe 8200 	IFG 0x8200, SP
-282 0129: 7dc1 0126 		SET PC, clear_screen_loop
-283 012b: 01b1 	SET SP, A
-284 012c: 61c1 	SET PC, POP
-286 012d: 
-287 012d: 
-288 012d: 
-289 012d: ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-289 012d: ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-290 012d: ;            SCREEN DRAWING CODE            ;
-291 012d: ; this is the part y'all wanted to optimize ;
-292 012d: ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-294 012d: ; takes no inputs
-294 012d: ; takes no inputs
-295 012d: ; assumes that the 33rd column of tiles (off-screen) will be at (A-0x1E1),
-296 012d: ; where A is start-of-screen-row
-297 012d: ; e.g., the bottom-right tile of a 32x16 display gets the value stored at 0x7FFF
-298 012d: ; note that -0x1E1 is 0xFE1F
-300 012d: ; clobbers A, B, C
-300 012d: ; clobbers A, B, C
-302 012d: ; remember, we're aiming at 12 FPS here
-302 012d: ; remember, we're aiming at 12 FPS here
-303 012d: ; for a 32x16 screen, that means each pixel/tile gets at most 16 cycles to update
-304 012d: ; using 512 cycles per row as a benchmark also works
-305 012d: :scroll_screen_right
-306 012d: 7c01 8000 	SET A, 0x8000 ; this is where we're writing to
-307 012f: 7c11 0020 	SET B, 0x0020 ; row offset (stored in a register to save cycles)
-308 0131: 7c21 8200 	SET C, 0x8200 ; endpoint
-309 0133: :scroll_screen_right_loop
-310 0133: 4081 0001 	SET [A], [1+A] ; 1 + 0 + 1 = 2 cycles
-311 0135: 4101 0001 0002 	SET [1+A], [2+A] ; 1 + 1 + 1 = 3 cycles
-312 0138: 4101 0002 0003 	SET [2+A], [3+A] ; 3 cycles
-313 013b: 4101 0003 0004 	SET [3+A], [4+A] ; 3 cycles
-314 013e: 4101 0004 0005 	SET [4+A], [5+A] ; 3 cycles
-315 0141: 4101 0005 0006 	SET [5+A], [6+A] ; 3 cycles
-316 0144: 4101 0006 0007 	SET [6+A], [7+A] ; 3 cycles
-317 0147: 4101 0007 0008 	SET [7+A], [8+A] ; 3 cycles
-318 014a: 4101 0008 0009 	SET [8+A], [9+A] ; 3 cycles
-319 014d: 4101 0009 000a 	SET [9+A], [10+A] ; 3 cycles
-320 0150: 4101 000a 000b 	SET [10+A], [11+A] ; 3 cycles
-321 0153: 4101 000b 000c 	SET [11+A], [12+A] ; 3 cycles
-322 0156: 4101 000c 000d 	SET [12+A], [13+A] ; 3 cycles
-323 0159: 4101 000d 000e 	SET [13+A], [14+A] ; 3 cycles
-324 015c: 4101 000e 000f 	SET [14+A], [15+A] ; 3 cycles
-325 015f: 4101 000f 0010 	SET [15+A], [16+A] ; 3 cycles
-326 0162: 4101 0010 0011 	SET [16+A], [17+A] ; 3 cycles
-327 0165: 4101 0011 0012 	SET [17+A], [18+A] ; 3 cycles
-328 0168: 4101 0012 0013 	SET [18+A], [19+A] ; 3 cycles
-329 016b: 4101 0013 0014 	SET [19+A], [20+A] ; 3 cycles
-330 016e: 4101 0014 0015 	SET [20+A], [21+A] ; 3 cycles
-331 0171: 4101 0015 0016 	SET [21+A], [22+A] ; 3 cycles
-332 0174: 4101 0016 0017 	SET [22+A], [23+A] ; 3 cycles
-333 0177: 4101 0017 0018 	SET [23+A], [24+A] ; 3 cycles
-334 017a: 4101 0018 0019 	SET [24+A], [25+A] ; 3 cycles
-335 017d: 4101 0019 001a 	SET [25+A], [26+A] ; 3 cycles
-336 0180: 4101 001a 001b 	SET [26+A], [27+A] ; 3 cycles
-337 0183: 4101 001b 001c 	SET [27+A], [28+A] ; 3 cycles
-338 0186: 4101 001c 001d 	SET [28+A], [29+A] ; 3 cycles
-339 0189: 4101 001d 001e 	SET [29+A], [30+A] ; 3 cycles
-340 018c: 4101 001e 001f 	SET [30+A], [31+A] ; 3 cycles
-341 018f: 4101 001f fe1f 	SET [31+A], [0xFE1F+A] ; 3 cycles
-342 0192: 0402 	ADD A, B ; 2 + 0 + 0 = 2 cycles
-343 0193: 002e 	IFG C, A ; 2 for IFG, plus 0, plus 0 = 2 cycles
-344 0194: 7dc1 0133 		SET PC, scroll_screen_right_loop ; 1 + 0 + 1 = 2 cycles
-346 0196: ; total cycle count: 31*3 + 4*2 = 101 cycles
-346 0196: ; total cycle count: 31*3 + 4*2 = 101 cycles
-347 0196: ; we allowed ourselves 512 per row, I think we're in good shape
-349 0196: :exit_scroll_screen_right
-349 0196: :exit_scroll_screen_right
-350 0196: 61c1 	SET PC, POP
-352 0197: :player_x
-352 0197: :player_x
-353 0197: 0000 	DAT 0x0000
-354 0198: :player_y
-355 0198: 0000 	DAT 0x0000
-357 0199: :player_nose_color
-357 0199: :player_nose_color
-358 0199: 0c00 	DAT 0x0C00
-359 019a: :player_body_color
-360 019a: 0f00 	DAT 0x0F00
-362 019b: :asteroid_tile
-362 019b: :asteroid_tile
-363 019b: e02a 	DAT 0xE02A
-365 019c: :laser_tile
-365 019c: :laser_tile
-366 019c: d03d 	DAT 0xD03D
-368 019d: :key_up
-368 019d: :key_up
-369 019d: 0003 	DAT 0x0003
-370 019e: :key_down
-371 019e: 0004 	DAT 0x0004
-372 019f: :key_left
-373 019f: 0001 	DAT 0x0001
-374 01a0: :key_right
-375 01a0: 0002 	DAT 0x0002
-376 01a1: :key_space
-377 01a1: 0020 	DAT 0x0020
-379 01a2: :laser_count
-379 01a2: :laser_count
-380 01a2: 0000 	DAT 0x0000 ; max of 4
-381 01a3: :lasers
-382 01a3: 0000 	DAT 0x0000
-383 01a4: 0000 	DAT 0x0000
-384 01a5: 0000 	DAT 0x0000
-385 01a6: 0000 	DAT 0x0000
-387 01a7: 
-388 01a7: 
-389 01a7: ; Linear congruential generator
-389 01a7: ; Linear congruential generator
-390 01a7: ; Generates random words, using two words of state.
-391 01a7: ; Based on the algorithm described here:
-392 01a7: ; http://6502.org/source/integers/random/random.html
-394 01a7: ; To seed the generator, simply overwrite the data in randseed.
-394 01a7: ; To seed the generator, simply overwrite the data in randseed.
-395 01a7: 5678 :randseed1 dat 0x5678 ; these were one line originally
-396 01a8: 1234 :randseed2 dat 0x1234 ; but DCPU-16 Studio didn't like that
-398 01a9: ; Sets A to a 16-bit PRN.
-398 01a9: ; Sets A to a 16-bit PRN.
-399 01a9: :rand
-400 01a9: 	; 0x0019660D x seed + 1
-401 01a9: 0011 01a7 	SET B, [randseed1]
-402 01ab: 0001 01a8 	SET A, [randseed2]
-403 01ad: 7c04 01a7 660d 	MUL [randseed1], 0x660D
-404 01b0: 7421 	SET C, O
-405 01b1: 7c04 660d 	MUL A, 0x660D
-406 01b3: 0802 	ADD A, C
-407 01b4: e414 	MUL B, 0x0019
-408 01b5: 0402 	ADD A, B
-409 01b6: 8402 01a7 	ADD [randseed1], 1
-410 01b8: 7402 	ADD A, O
-411 01b9: 0001 01a8 	SET [randseed2], A
-412 01bb: 61c1 	SET PC, POP
+268 011d: 7811 0015 	SET B, [delay_time]
+269 011f: :delay_loop
+270 011f: 040e 	IFG A, B
+271 0120: 61c1 		SET PC, POP
+272 0121: 8402 	ADD A, 1
+273 0122: 7dc1 011f 	SET PC, delay_loop
+275 0124: 
+276 0124: :clear_screen
+276 0124: :clear_screen
+277 0124: 6c01 	SET A, SP
+278 0125: 7db1 8000 	SET SP, 0x8000
+279 0127: :clear_screen_loop
+280 0127: 8181 	SET POP, 0
+281 0128: 6dfe 8200 	IFG 0x8200, SP
+282 012a: 7dc1 0127 		SET PC, clear_screen_loop
+283 012c: 01b1 	SET SP, A
+284 012d: 61c1 	SET PC, POP
+286 012e: 
+287 012e: 
+288 012e: 
+289 012e: ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+289 012e: ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+290 012e: ;            SCREEN DRAWING CODE            ;
+291 012e: ; this is the part y'all wanted to optimize ;
+292 012e: ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+294 012e: ; takes no inputs
+294 012e: ; takes no inputs
+295 012e: ; assumes that the 33rd column of tiles (off-screen) will be at (A-0x1E1),
+296 012e: ; where A is start-of-screen-row
+297 012e: ; e.g., the bottom-right tile of a 32x16 display gets the value stored at 0x7FFF
+298 012e: ; note that -0x1E1 is 0xFE1F
+300 012e: ; clobbers A, B, C
+300 012e: ; clobbers A, B, C
+302 012e: ; remember, we're aiming at 12 FPS here
+302 012e: ; remember, we're aiming at 12 FPS here
+303 012e: ; for a 32x16 screen, that means each pixel/tile gets at most 16 cycles to update
+304 012e: ; using 512 cycles per row as a benchmark also works
+305 012e: :scroll_screen_right
+306 012e: 7c01 8000 	SET A, 0x8000 ; this is where we're writing to
+307 0130: 7c11 0020 	SET B, 0x0020 ; row offset (stored in a register to save cycles)
+308 0132: 7c21 8200 	SET C, 0x8200 ; endpoint
+309 0134: :scroll_screen_right_loop
+310 0134: 4081 0001 	SET [A], [1+A] ; 1 + 0 + 1 = 2 cycles
+311 0136: 4101 0001 0002 	SET [1+A], [2+A] ; 1 + 1 + 1 = 3 cycles
+312 0139: 4101 0002 0003 	SET [2+A], [3+A] ; 3 cycles
+313 013c: 4101 0003 0004 	SET [3+A], [4+A] ; 3 cycles
+314 013f: 4101 0004 0005 	SET [4+A], [5+A] ; 3 cycles
+315 0142: 4101 0005 0006 	SET [5+A], [6+A] ; 3 cycles
+316 0145: 4101 0006 0007 	SET [6+A], [7+A] ; 3 cycles
+317 0148: 4101 0007 0008 	SET [7+A], [8+A] ; 3 cycles
+318 014b: 4101 0008 0009 	SET [8+A], [9+A] ; 3 cycles
+319 014e: 4101 0009 000a 	SET [9+A], [10+A] ; 3 cycles
+320 0151: 4101 000a 000b 	SET [10+A], [11+A] ; 3 cycles
+321 0154: 4101 000b 000c 	SET [11+A], [12+A] ; 3 cycles
+322 0157: 4101 000c 000d 	SET [12+A], [13+A] ; 3 cycles
+323 015a: 4101 000d 000e 	SET [13+A], [14+A] ; 3 cycles
+324 015d: 4101 000e 000f 	SET [14+A], [15+A] ; 3 cycles
+325 0160: 4101 000f 0010 	SET [15+A], [16+A] ; 3 cycles
+326 0163: 4101 0010 0011 	SET [16+A], [17+A] ; 3 cycles
+327 0166: 4101 0011 0012 	SET [17+A], [18+A] ; 3 cycles
+328 0169: 4101 0012 0013 	SET [18+A], [19+A] ; 3 cycles
+329 016c: 4101 0013 0014 	SET [19+A], [20+A] ; 3 cycles
+330 016f: 4101 0014 0015 	SET [20+A], [21+A] ; 3 cycles
+331 0172: 4101 0015 0016 	SET [21+A], [22+A] ; 3 cycles
+332 0175: 4101 0016 0017 	SET [22+A], [23+A] ; 3 cycles
+333 0178: 4101 0017 0018 	SET [23+A], [24+A] ; 3 cycles
+334 017b: 4101 0018 0019 	SET [24+A], [25+A] ; 3 cycles
+335 017e: 4101 0019 001a 	SET [25+A], [26+A] ; 3 cycles
+336 0181: 4101 001a 001b 	SET [26+A], [27+A] ; 3 cycles
+337 0184: 4101 001b 001c 	SET [27+A], [28+A] ; 3 cycles
+338 0187: 4101 001c 001d 	SET [28+A], [29+A] ; 3 cycles
+339 018a: 4101 001d 001e 	SET [29+A], [30+A] ; 3 cycles
+340 018d: 4101 001e 001f 	SET [30+A], [31+A] ; 3 cycles
+341 0190: 4101 001f fe1f 	SET [31+A], [0xFE1F+A] ; 3 cycles
+342 0193: 0402 	ADD A, B ; 2 + 0 + 0 = 2 cycles
+343 0194: 002e 	IFG C, A ; 2 for IFG, plus 0, plus 0 = 2 cycles
+344 0195: 7dc1 0134 		SET PC, scroll_screen_right_loop ; 1 + 0 + 1 = 2 cycles
+346 0197: ; total cycle count: 31*3 + 4*2 = 101 cycles
+346 0197: ; total cycle count: 31*3 + 4*2 = 101 cycles
+347 0197: ; we allowed ourselves 512 per row, I think we're in good shape
+349 0197: :exit_scroll_screen_right
+349 0197: :exit_scroll_screen_right
+350 0197: 61c1 	SET PC, POP
+352 0198: :player_x
+352 0198: :player_x
+353 0198: 0000 	DAT 0x0000
+354 0199: :player_y
+355 0199: 0000 	DAT 0x0000
+357 019a: :player_nose_color
+357 019a: :player_nose_color
+358 019a: 0c00 	DAT 0x0C00
+359 019b: :player_body_color
+360 019b: 0f00 	DAT 0x0F00
+362 019c: :asteroid_tile
+362 019c: :asteroid_tile
+363 019c: e02a 	DAT 0xE02A
+365 019d: :laser_tile
+365 019d: :laser_tile
+366 019d: d03d 	DAT 0xD03D
+368 019e: :key_up
+368 019e: :key_up
+369 019e: 0003 	DAT 0x0003
+370 019f: :key_down
+371 019f: 0004 	DAT 0x0004
+372 01a0: :key_left
+373 01a0: 0001 	DAT 0x0001
+374 01a1: :key_right
+375 01a1: 0002 	DAT 0x0002
+376 01a2: :key_space
+377 01a2: 0020 	DAT 0x0020
+379 01a3: :laser_count
+379 01a3: :laser_count
+380 01a3: 0000 	DAT 0x0000 ; max of 4
+381 01a4: :lasers
+382 01a4: 0000 	DAT 0x0000
+383 01a5: 0000 	DAT 0x0000
+384 01a6: 0000 	DAT 0x0000
+385 01a7: 0000 	DAT 0x0000
+387 01a8: 
+388 01a8: 
+389 01a8: ; Linear congruential generator
+389 01a8: ; Linear congruential generator
+390 01a8: ; Generates random words, using two words of state.
+391 01a8: ; Based on the algorithm described here:
+392 01a8: ; http://6502.org/source/integers/random/random.html
+394 01a8: ; To seed the generator, simply overwrite the data in randseed.
+394 01a8: ; To seed the generator, simply overwrite the data in randseed.
+395 01a8: 5678 :randseed1 dat 0x5678 ; these were one line originally
+396 01a9: 1234 :randseed2 dat 0x1234 ; but DCPU-16 Studio didn't like that
+398 01aa: ; Sets A to a 16-bit PRN.
+398 01aa: ; Sets A to a 16-bit PRN.
+399 01aa: :rand
+400 01aa: 	; 0x0019660D x seed + 1
+401 01aa: 7811 01a8 	SET B, [randseed1]
+402 01ac: 7801 01a9 	SET A, [randseed2]
+403 01ae: 7de4 01a8 660d 	MUL [randseed1], 0x660D
+404 01b1: 7421 	SET C, O
+405 01b2: 7c04 660d 	MUL A, 0x660D
+406 01b4: 0802 	ADD A, C
+407 01b5: e414 	MUL B, 0x0019
+408 01b6: 0402 	ADD A, B
+409 01b7: 85e2 01a8 	ADD [randseed1], 1
+410 01b9: 7402 	ADD A, O
+411 01ba: 01e1 01a9 	SET [randseed2], A
+412 01bc: 61c1 	SET PC, POP
 
 ======== Label Directory ========
 
-019b	asteroid_tile
-0123	clear_screen
-0126	clear_screen_loop
+019c	asteroid_tile
+0124	clear_screen
+0127	clear_screen_loop
 011c	delay
-011e	delay_loop
+011f	delay_loop
 0015	delay_time
 000b	exit
-0196	exit_scroll_screen_right
+0197	exit_scroll_screen_right
 00c5	fire_lasers
 0109	fizzle_laser
 0023	game_loop
 004c	handle_game_logic
 011c	hang
 0000	init
-019e	key_down
-019f	key_left
-01a0	key_right
-01a1	key_space
-019d	key_up
+019f	key_down
+01a0	key_left
+01a1	key_right
+01a2	key_space
+019e	key_up
 010e	kill_laser
 0103	laser_blast
-01a2	laser_count
-019c	laser_tile
-01a3	lasers
+01a3	laser_count
+019d	laser_tile
+01a4	lasers
 011a	lose
 00e2	move_laser_loop
 00de	move_lasers
 0088	move_player_down
 00a3	move_player_right
 006b	move_player_up
-019a	player_body_color
-0199	player_nose_color
-0197	player_x
-0198	player_y
-01a9	rand
-01a7	randseed1
-01a8	randseed2
+019b	player_body_color
+019a	player_nose_color
+0198	player_x
+0199	player_y
+01aa	rand
+01a8	randseed1
+01a9	randseed2
 0016	run_game
-012d	scroll_screen_right
-0133	scroll_screen_right_loop
+012e	scroll_screen_right
+0134	scroll_screen_right_loop
 0037	toggle_player_sprite
 0066	try_move_down
 0061	try_move_up

@@ -213,7 +213,7 @@ public class Cpu implements Runnable {
 		PC = wrapMemory(PC);
 		long timeToComplete = CYCLE_TIME_NANO - (start - System.nanoTime());
 		try {
-			Thread.sleep(0L, (int)timeToComplete);
+			Thread.sleep(timeToComplete / 1000000L, (int)(timeToComplete % 1000000L));
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println(timeToComplete);

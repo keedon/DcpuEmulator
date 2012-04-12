@@ -16,6 +16,8 @@ import appl.dcpu.utility.Utils;
 
 public class MemoryDump extends JPanel implements ActionListener {
 
+	private static final int WORDS_PER_LINE = 8;
+
 	private static final long serialVersionUID = 1L;
 
 	private final Cpu cpu;
@@ -45,11 +47,11 @@ public class MemoryDump extends JPanel implements ActionListener {
 		// 32 lines of 8 words
 		for (int i = 0; i < 32; i++) {
 			StringBuffer hex = new StringBuffer();
-			hex.append(String.format("%04x: ", startAddress + (i*4)));
+			hex.append(String.format("%04x: ", startAddress + (i*8)));
 			StringBuffer characters = new StringBuffer();
 			characters.append("*");
 			for (int j = 0; j < 8; j++) {
-				int word = cpu.getWordAt(startAddress + (i*4) + j);
+				int word = cpu.getWordAt(startAddress + (i*WORDS_PER_LINE) + j);
 				hex.append(String.format("%04x ", word));
 				addCharacter(characters, word);
 			}

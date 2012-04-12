@@ -287,7 +287,7 @@ public class Assembler {
 			labelDictionary.put(tokenAsString(), label);
 			result.add("0000");
 			currentPC++;
-			return 0x1f;	// Next word
+			return 0x1e;	// [Next word]
 		} else {
 			throw new RuntimeException("Unable to parse argument " + tokeniser);
 		}
@@ -361,7 +361,8 @@ public class Assembler {
 			}
 		}
 		if (labelDictionary.containsKey(fullToken)) {
-			addLabel(fullToken);
+			result.add(toHex(labelDictionary.get(fullToken).value));
+			currentPC++;
 		} else {
 			// Assume pass 1
 			Label label = new Label();
@@ -370,9 +371,8 @@ public class Assembler {
 			labelDictionary.put(fullToken, label);
 			result.add("0000");
 			currentPC++;
-			return 0x1f;	// Next word
 		}
-		return 0;
+		return 0x1e;	// [Next word]
 	}
 
 	private void labelDefinition() throws IOException {

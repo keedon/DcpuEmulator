@@ -14,25 +14,26 @@ public class Screen extends JPanel {
 	public static final int SCREEN_WIDTH = 32;
 	public static final int SCREEN_HEIGHT = 16;
 	
-	private static final Color BLACK = new Color(0x000000);
-	private static final Color RED = new Color(0x883932);
-	private static final Color GREEN = new Color(0x55A049);
-	private static final Color YELLOW = new Color(0xBFCE72);
-	private static final Color BLUE = new Color(0x40318D);
-	private static final Color PURPLE = new Color(0x8B3F96);
-	private static final Color CYAN = new Color(0x67B6BD);
-	private static final Color WHITE = new Color(0xFFFFFF);
-	private static final Color DARK_GREY = new Color(0x505050);
-	private static final Color GREY = new Color(0x787878);
-	private static final Color LIGHT_RED = new Color(0xB86962);
-	private static final Color ORANGE = new Color(0x8B5429);
-	private static final Color BROWN = new Color(0x574200);
-	private static final Color LIGHT_GREEN = new Color(0x94E089);
-	private static final Color LIGHT_BLUE = new Color(0x7869C4);
-	private static final Color LIGHT_GREY = new Color(0x9F9F9F);
+	private static final Color BLACK = new Color(0, 0, 0);
+	private static final Color RED = new Color(205, 0, 0);
+	private static final Color GREEN = new Color(0, 205, 0);
+	private static final Color YELLOW = new Color(205, 205, 0);
+	private static final Color BLUE = new Color(0, 0, 238);
+	private static final Color MAGENTA = new Color(205, 0, 205);
+	private static final Color CYAN = new Color(0, 205, 205);
+	private static final Color WHITE = new Color(229, 229, 229);
+	private static final Color LIGHT_BLACK = new Color(127, 127, 127);
+	private static final Color LIGHT_RED = new Color(255, 0, 0);
+	private static final Color LIGHT_GREEN = new Color(0, 255, 0);
+	private static final Color LIGHT_YELLOW = new Color(255, 255, 0);
+	private static final Color LIGHT_BLUE = new Color(92, 92, 255);
+	private static final Color LIGHT_MAGENTA = new Color(255, 0, 255);
+	private static final Color LIGHT_CYAN = new Color(0, 255, 255);
+	private static final Color LIGHT_WHITE = new Color(255, 255, 255);
+
 	
-	private Color[] ANSI_COLORS = {BLACK, RED, GREEN, YELLOW, BLUE, PURPLE, CYAN, WHITE,
-									DARK_GREY, GREY, LIGHT_RED, ORANGE, BROWN, LIGHT_GREEN, LIGHT_BLUE, LIGHT_GREY};
+	private Color[] ANSI_COLORS = {BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE,
+			LIGHT_BLACK, LIGHT_RED, LIGHT_GREEN, LIGHT_YELLOW, LIGHT_BLUE, LIGHT_MAGENTA, LIGHT_CYAN, LIGHT_WHITE};
 	
 	private int[] screenText = new int[SCREEN_WIDTH * SCREEN_HEIGHT];
 	private Font font;
