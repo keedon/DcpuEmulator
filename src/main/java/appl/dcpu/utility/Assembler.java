@@ -26,6 +26,8 @@ public class Assembler {
 	private static final String REGISTERS = "abcxyzij";
 	private static final Map<String, Integer> opCodes = new HashMap<String, Integer>();
     static {
+    	opCodes.put("equ", -3);
+    	opCodes.put("include", -2);
     	opCodes.put("dat", -1);
         opCodes.put("set", 1);
         opCodes.put("add", 2);
@@ -59,6 +61,7 @@ public class Assembler {
 	private boolean success;
 	private List<String> result;
 	private int pass;
+	private Label lastLabel;
 	
 	public Assembler(String program) {
 		this.program = program;
@@ -171,31 +174,52 @@ public class Assembler {
 		switch (opCode) {
 		case -1:
 			// dat
+			processDat();
+			break;
+		case -2:
+			// include
+			break;
+		case -3:
+			// equ
+			equ();
+			break;
+		}
+	}
+
+	private void equ() throws IOException {
+		tokeniser.nextToken();
+		if (isNumeric(tokenAsString().substring(0, 1))) {
+			lastLabel.value = convertToNumber(tokenAsString());
+		} else if (labelDictionary.containsKey(tokenAsString())) {
+			lastLabel.value = labelDictionary.get(tokenAsString()).value;
+		}
+	}
+
+	private void processDat() throws IOException {
+		tokeniser.nextToken();
+		while (tokeniser.ttype != StreamTokenizer.TT_EOL) {
+			if (tokenAsString().startsWith(";")) {
+				skipRestOfLine();
+				return;
+			}
+			if (tokenAsString().startsWith("\"")) {
+				addString();
+			} else if (isNumeric(tokenAsString().substring(0, 1))) {
+				addNumber();
+			} else if (labelDictionary.containsKey(tokenAsString())) {
+				result.add(toHex(labelDictionary.get(tokenAsString()).value));
+				currentPC++;
+			} else {
+				// Add a zero - assume we're in pass 1 and it's a label
+				result.add("0000");
+				currentPC++;
+			}
 			tokeniser.nextToken();
-			while (tokeniser.ttype != StreamTokenizer.TT_EOL) {
-				if (tokenAsString().startsWith(";")) {
-					skipRestOfLine();
-					return;
-				}
-				if (tokenAsString().startsWith("\"")) {
-					addString();
-				} else if (isNumeric(tokenAsString().substring(0, 1))) {
-					addNumber();
-				} else if (labelDictionary.containsKey(tokenAsString())) {
-					result.add(toHex(labelDictionary.get(tokenAsString()).value));
-					currentPC++;
-				} else {
-					// Add a zero - assume we're in pass 1 and it's a label
-					result.add("0000");
-					currentPC++;
-				}
+			if (tokenAsString().equals(",")) {
 				tokeniser.nextToken();
-				if (tokenAsString().equals(",")) {
-					tokeniser.nextToken();
-				} else {
-					tokeniser.pushBack();
-					return;
-				}
+			} else {
+				tokeniser.pushBack();
+				return;
 			}
 		}
 	}
@@ -380,16 +404,17 @@ public class Assembler {
 		if (tokeniser.ttype == StreamTokenizer.TT_WORD) {
 			if (labelDictionary.containsKey(tokenAsString())) {
 				labelDictionary.get(tokenAsString()).value = currentPC;
+				lastLabel = labelDictionary.get(tokenAsString());
 			} else {
-				Label label = new Label();
-				label.value = currentPC;
-				label.canBeShort = true;
-				labelDictionary.put(tokenAsString(), label);
+				lastLabel = new Label();
+				lastLabel.value = currentPC;
+				lastLabel.canBeShort = true;
+				labelDictionary.put(tokenAsString(), lastLabel);
 			}
 		}
 	}
 
-	private void createTokeniser() {
+	private void createTokeniser() throws IOException {
 		StringReader r = new StringReader(program);
 		tokeniser = new StreamTokenizer(r);
 		tokeniser.resetSyntax();
@@ -400,6 +425,7 @@ public class Assembler {
 		tokeniser.wordChars('A', 'Z');
 		tokeniser.wordChars('_', '_');
 		tokeniser.whitespaceChars(0, ' ');
+		tokeniser.nextToken();
 	}
 	
 	private void addLabelDictionary() {

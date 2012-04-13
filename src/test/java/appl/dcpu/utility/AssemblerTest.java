@@ -11,6 +11,7 @@ import appl.dcpu.utility.Assembler.AssemblyResult;
 public class AssemblerTest {
 
 	private static final String PROGRAM1 = "; Try some basic stuff\n" +
+":other equ 0x9090" +
 "              SET A, 0x30              ; 7c01 0030\n" +
 "              SEN [0x1000], 0x20       ; 7de1 1000 0020\n" +
 "              SUB A, [0x1000]          ; 7803 1000\n" +
@@ -47,7 +48,7 @@ public class AssemblerTest {
 	
 	@Test
 	public void assembleBigProgram() throws Exception {
-		File bigProgram = new File("test/Bench 'Em Up - space shooter.dasm16");
+		File bigProgram = new File("test/atlasOS.asm");
 		BufferedReader pgmReader = new BufferedReader(new FileReader(bigProgram));
 		StringBuilder pgm = new StringBuilder();
 		String line;

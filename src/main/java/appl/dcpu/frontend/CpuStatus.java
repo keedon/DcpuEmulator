@@ -3,7 +3,6 @@ package appl.dcpu.frontend;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -52,7 +51,7 @@ public class CpuStatus extends JPanel implements ActionListener {
 	}
 	
 	private void addStopAddress() {
-		stopAddress = new JTextField("0x0000");
+		stopAddress = new JTextField("");
 		stopAddress.setMinimumSize(new Dimension(50, 40));
 		this.add(stopAddress);
 	}
@@ -102,6 +101,9 @@ public class CpuStatus extends JPanel implements ActionListener {
 					cpu.setStopAddress(addr);
 				}
 			} catch (BadLocationException e2) {
+				cpu.setStopAddress(-1);
+			} catch (NumberFormatException e3) {
+				cpu.setStopAddress(-1);
 			}
 			if (!cpu.isRunning()) {
 				cpu.start();

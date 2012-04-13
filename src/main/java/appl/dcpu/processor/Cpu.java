@@ -34,7 +34,7 @@ public class Cpu implements Runnable {
 	private static final int MAX_INT = 32767;
 	private static final int MIN_INT = -32768;
 	private static final int KEYBOARD_ADDRESS = 0x9000;
-	private static final long CYCLE_TIME_NANO = 100000000L / 100000L; 
+	private static final double CYCLE_TIME_NANO = 1000;
 	
 	private Thread cpuThread = null;
 	private boolean stopCpu;
@@ -104,20 +104,23 @@ public class Cpu implements Runnable {
 	@Override
 	public void run() {
 		stopCpu = false;
+		double instCount = 0;
+		long startTime = System.nanoTime();
 		while(!stopCpu && PC != stopAddress) {
-			step();
+			instCount += step();
 		}
+		System.out.println(String.format("Time taken=%d", System.nanoTime() - startTime));
 		stopCpu = true;
 	}
 	
-	public void step() {
+	public double step() {
 		int val, ea, eb;
 		int eaNext = 0, ebNext = 0;
 		int inst = getMem(PC++, true);
 		int op = inst & 15;
 		int a = (inst >> 4) & 0x3f;
 		int b = (inst >> 10) & 0x3f;
-		int numCycles = 1;
+		double numCycles = 1;
 		long start = System.nanoTime();
 		// Get the words (if needed) for the instruction
 		// now we don't have to worry about the decode order.
@@ -131,6 +134,7 @@ public class Cpu implements Runnable {
 		}
 		if (skip) {
 			skip = false;
+			numCycles = 1;
 		} else {
 			switch(op) {
 			case SET:
@@ -212,13 +216,11 @@ public class Cpu implements Runnable {
 			}
 		}
 		PC = wrapMemory(PC);
-		long timeToComplete = CYCLE_TIME_NANO - (start - System.nanoTime());
-		try {
-			Thread.sleep(timeToComplete / 1000000L, (int)(timeToComplete % 1000000L));
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println(timeToComplete);
+		double timeRequired = numCycles * CYCLE_TIME_NANO;
+		for (long end = System.nanoTime(); timeRequired > (end - start); end = System.nanoTime()) {
+			Thread.yield();
 		}
+		return numCycles;
 	}
 	
 	private boolean addressModeNeedsNextWord(int mode) {
@@ -350,7 +352,7 @@ public class Cpu implements Runnable {
 	
 	private void setMem(int addr, int val) {
 		addr = wrapMemory(addr);
-		if (addr >= SCREEN_ADDRESS && addr <= (SCREEN_ADDRESS + Screen.SCREEN_HEIGHT * Screen.SCREEN_WIDTH)) {
+		if (addr >= SCREEN_ADDRESS && addr <= (SCREEN_ADDRESS + Screen.SCREEN_HEIGHT * Screen.SCREEN_WIDTH - 1)) {
 			screen.setMem(addr - SCREEN_ADDRESS, val);
 		}
 		memory[addr] = val;

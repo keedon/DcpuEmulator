@@ -1,0 +1,40 @@
+jsr SCREENSAVER
+:Screensaver
+      SET I, 512
+      :ss_loop
+                 SET [0x8000], 1
+                 jsr rand
+                 SET [0x8000+I], X
+                 IFE I, 0
+                     SET I, 512
+                 SUB I, 1
+                 SET PUSH, X
+                 SET X, 5
+                 jsr sleep
+                 SET X, POP
+                 SET PC, ss_loop
+
+:sleep
+      MUL X, 25
+      :sleep_loop
+                 SUB X, 1
+                 IFE X, 0
+                     SET PC, POP
+                 SET PC, sleep_loop
+
+:rand          ;SET X to SEED
+     ADD X, A  ;Extra Randomness
+     ADD X, B
+     ADD X, C
+     ADD X, Y
+     ADD X, Z
+     ADD X, I
+     ADD X, J
+     ADD X, PC
+     ADD X, SP
+     MUL X, 16807
+     ADD X, 12345
+     SET PUSH, X
+     SET X, 65535
+     MOD X, POP
+     SET PC, POP     ;Return
