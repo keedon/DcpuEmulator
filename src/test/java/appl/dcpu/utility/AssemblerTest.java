@@ -48,7 +48,7 @@ public class AssemblerTest {
 	
 	@Test
 	public void assembleBigProgram() throws Exception {
-		File bigProgram = new File("test/atlasOS.asm");
+		File bigProgram = new File("OS/msgOs.dasm16");
 		BufferedReader pgmReader = new BufferedReader(new FileReader(bigProgram));
 		StringBuilder pgm = new StringBuilder();
 		String line;

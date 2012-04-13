@@ -1,8 +1,6 @@
 DCPU-16 emulator and assembler written in Java with a Swing front-end.
 
-This is a very early version which does display the DCPU screen
-I'm not entirely sure it's correct, since i've only got Notch's
-sample program to go from.
+GUI layout's still a bit rough, but it's ready for serious work (with care)
 
 To use.
 
@@ -16,6 +14,8 @@ java -jar build/libs/dcpu.jar
 File>Load - will load a hex dump (see the test directory for examples)
 File>Run - will run the emulation. A trace of the CPU running is written to sysout.
 File>Assemble - will assemble a file and put the resulting .hex file in the same directory as the dasm16 file
+
+Started work on message based runtime for DCPU-16 - should help shake out a few more bugs (see OS directory for details)
 
 TODO:
  * Add better keyboard support.

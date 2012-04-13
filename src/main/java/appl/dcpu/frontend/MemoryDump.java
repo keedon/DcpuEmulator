@@ -42,25 +42,29 @@ public class MemoryDump extends JPanel implements ActionListener {
 	}
 
 	public void setDump() {
-		int startAddress = Utils.fromHex(address.getText());
-		StringBuilder sb = new StringBuilder();
-		// 32 lines of 8 words
-		for (int i = 0; i < 32; i++) {
-			StringBuffer hex = new StringBuffer();
-			hex.append(String.format("%04x: ", startAddress + (i*8)));
-			StringBuffer characters = new StringBuffer();
-			characters.append("*");
-			for (int j = 0; j < 8; j++) {
-				int word = cpu.getWordAt(startAddress + (i*WORDS_PER_LINE) + j);
-				hex.append(String.format("%04x ", word));
-				addCharacter(characters, word);
+		try {
+			int startAddress = Utils.fromHex(address.getText());
+			StringBuilder sb = new StringBuilder();
+			// 32 lines of 8 words
+			for (int i = 0; i < 32; i++) {
+				StringBuffer hex = new StringBuffer();
+				hex.append(String.format("%04x: ", startAddress + (i*8)));
+				StringBuffer characters = new StringBuffer();
+				characters.append("*");
+				for (int j = 0; j < 8; j++) {
+					int word = cpu.getWordAt(startAddress + (i*WORDS_PER_LINE) + j);
+					hex.append(String.format("%04x ", word));
+					addCharacter(characters, word);
+				}
+				characters.append("*");
+				sb.append(hex.toString());
+				sb.append(characters.toString());
+				sb.append("\n");
 			}
-			characters.append("*");
-			sb.append(hex.toString());
-			sb.append(characters.toString());
-			sb.append("\n");
+			dumpArea.setText(sb.toString());
+		} catch (NumberFormatException e) {
+			// Ignore - dodgy character
 		}
-		dumpArea.setText(sb.toString());
 	}
 
 	private void addCharacter(StringBuffer characters, int word) {

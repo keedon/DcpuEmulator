@@ -350,7 +350,7 @@ public class Assembler {
 	}
 
 	private boolean isNumeric(String character) {
-		return "0123456789".contains(character);
+		return "0123456789-".contains(character);
 	}
 	
 	private String tokenAsString() {
@@ -373,16 +373,29 @@ public class Assembler {
 		if (REGISTERS.contains(fullToken)) {
 			return REGISTERS.indexOf(fullToken) + 8;
 		}
-		if (isNumeric(fullToken.substring(0, 1))) {
+		if (fullToken.contains("+")) {
+			// Register indirect
 			String[] parts = fullToken.split("\\+");
-			int value = convertToNumber(parts[0]);
+			if (labelDictionary.containsKey(parts[0])) {
+				result.add(toHex(labelDictionary.get(parts[0]).value));
+				currentPC++;
+			} else if (isNumeric(parts[0])) {
+				int value = convertToNumber(parts[0]);
+				result.add(toHex(value));
+				currentPC++;
+			} else if (pass == 1) {
+				result.add("0000");
+				currentPC++;
+			} else {
+				throw new RuntimeException("Unable to parse register + offset");
+			}
+			return REGISTERS.indexOf(parts[1]) + 0x10;
+		}
+		if (isNumeric(fullToken.substring(0, 1))) {
+			int value = convertToNumber(fullToken);
 			result.add(toHex(value));
 			currentPC++;
-			if (parts.length > 1) {
-				return REGISTERS.indexOf(parts[1]) + 0x10;
-			} else {
-				return 0x1e;
-			}
+			return 0x1e;
 		}
 		if (labelDictionary.containsKey(fullToken)) {
 			result.add(toHex(labelDictionary.get(fullToken).value));
@@ -424,6 +437,7 @@ public class Assembler {
 		tokeniser.wordChars('a', 'z');
 		tokeniser.wordChars('A', 'Z');
 		tokeniser.wordChars('_', '_');
+		tokeniser.wordChars('-', '-');
 		tokeniser.whitespaceChars(0, ' ');
 		tokeniser.nextToken();
 	}
@@ -431,7 +445,7 @@ public class Assembler {
 	private void addLabelDictionary() {
 		listing.append("\n\n======== Label Directory ========\n\n");
 		for (Entry<String, Label> entry : labelDictionary.entrySet()) {
-			listing.append(toHex(entry.getValue().value)).append('\t').append(entry.getKey()).append('\n');
+			listing.append(toHex(entry.getValue().value & 0xffff)).append('\t').append(entry.getKey()).append('\n');
 		}
 	}
 }

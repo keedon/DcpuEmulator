@@ -1,0 +1,171 @@
+; Message based OS
+; Processes communicate via messages, since this seems to be how Notch intends for device drivers to work
+; API:
+;    jsr new_process - start a new process.
+;         On entry a = start address of the new process
+;                  other registers (except SP/O) will be passed to process with no change
+;         On exit - a = process id of new process or error no if the creation failed
+;
+;    jsr send - send a message to another process (may cause process switch)
+;		 On entry - a = process id to send to, b/c will be sent to the other process
+;        On exit - a = 0 if successful or error no if failed
+;	    
+;    jsr wait - wait for a message to arrive
+;         On exit - b/c are the message parameters passed from the other process
+;
+;    jsr yield - let another process run - no registers will be harmed during this call
+;
+; Utilities
+;    jsr clear - clear the screen - no register change
+;    jsr emit - print character in a
+;    jsr print_string - print string pointed to by a
+;    jsr peek_key - check for a keypress - a = 0 or key pressed
+;    jsr malloc - allocate some memory size=a, on exit a = location or error no
+;    jsr free - free memory pointed to by a, size b - on exit a = 0 for success or error no if failed
+;
+; error numbers
+:success 				equ	0
+:process_start_failed	equ	-1
+:no_such_process		equ -2
+:alloc_failed			equ -3
+:not_valid_free			equ -4
+
+:start jsr	setup_memory
+:outer_loop
+		set b,100
+:loop	set a,100
+		jsr malloc
+		sub b,1
+		ifn b,0
+			set pc,loop
+		jsr free
+		set pc,outer_loop
+		
+; Code goes here - add a couple of test processes
+; This is process 0 (kernel)
+;		set a,demo_proc1
+;		jsr new_process
+;		set b,a					; save process id for demo_proc2 which will be sending messages to it
+;		set a,demo_proc2
+;		jsr new_process
+;:kernel_loop					; can be replaced with your code too - here for illustration only
+;		jsr yield
+;		set pc,kernel_loop
+;
+; demo process 1
+;:demo_proc1
+;		jsr wait				; we just print out any string we're passed
+;		set a,b					; string passed in b
+;		jsr print_string
+;		set a,100
+;		jsr malloc				; will eventuall run out of memory
+;		set pc,demo_proc1
+;
+; demo process 2
+;:demo_proc2
+;		set c,b					; save pointer to process
+;:p2_loop
+;		set b,message1
+;		set a,c					; pid to send to
+;		jsr send
+;		set b,message2
+;		set a,c
+;		jsr send
+;		set pc,p2_loop
+;
+;
+; kernel code starts here
+;
+;
+; Initialise the memory map - the free list consists of a linked list of free areas minimum size 2 words - first word = next free area, second word = length (inc header)
+:free_magic equ 0
+:next_free equ 1
+:free_size equ 2
+:magic_value equ 0xbeef
+:setup_memory
+; Initially two free areas <end of kernel>-0x7fff and 0xa000-0xffff (assuming 0x8000 - 0x9fff will be devices)
+	set x,end_of_kernel
+	set a,0x7fff
+	sub a,x				; size of lower area
+	sub a,3				; skip header
+	set [free_magic + x],magic_value
+	set [free_size + x],a
+	set [next_free + x],0xa000
+	set x,0xa000
+	set a,0xffff
+	sub a,x				; size of upper area
+	sub a,3				; skip header
+	set [free_magic + x],magic_value
+	set [free_size + x],a
+	set [next_free + x],0  ; end of free list
+	set y,free_list
+	set [free_magic + y],magic_value
+	set [next_free + y],end_of_kernel	; start location
+	set pc,pop
+;
+; naive allocator - find first free area big enough to satisfy request split off the first part, put rest on free list
+:malloc
+	set push,x 
+	set push,y
+	set y,free_list
+	set x,[next_free + y]
+:malloc_loop
+	ife	x,0
+		set pc,malloc_no_space
+	ife a,[free_size + x]
+		set pc,malloc_no_split		; Split not required - fits exactly
+	ifg	[free_size + x],a
+		set pc,malloc_got_area		; Allocate with split
+	set y,x					; last area
+	set x,[next_free + x]
+	set pc,malloc_loop
+:malloc_no_space
+	set a,alloc_failed
+	set y,pop
+	set x,pop
+	set	pc,pop
+:malloc_got_area
+	set push,b
+	set push,c
+	set b,x
+	add b,a							; start of new split
+	set c,[free_size + x]
+	sub c,a							; remainder of region
+	set [free_size + x],a			; set size of new area
+	set a,x							; area to return
+	add a,3							; skip header
+	set [next_free + y],b			; point previous region to new one
+	set [free_magic + b],magic_value
+	set [free_size + b],c
+	set [next_free + b],[next_free + x]	; point new one to next region
+	set c,pop
+	set b,pop
+	set y,pop
+	set x,pop
+	set pc,pop
+:malloc_no_split					; region exactly the right size
+	set [next_free + y],[next_free + x]
+	set a,x
+	add a,3							; skip header
+	set y,pop
+	set x,pop
+	set pc,pop
+;
+; Free allocated memory
+:free
+	sub a,3			; Header
+	ifn [free_magic + a],magic_value
+		set pc,bad_free
+	set push,x
+	set x,free_list
+	set [next_free + a],[next_free + x]
+	set [next_free + x],a
+	set x,pop
+	set pc,pop
+:bad_free
+	set a,not_valid_free
+	set pc,pop
+	
+
+:free_list dat 0, 0, 0		; free memory areas
+:end_of_kernel
