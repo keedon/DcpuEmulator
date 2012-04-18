@@ -4,9 +4,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import appl.dcpu.frontend.Screen;
-import appl.dcpu.utility.Disassembler;
 import appl.dcpu.utility.Utils;
 
 public class Cpu implements Runnable {
@@ -46,15 +47,15 @@ public class Cpu implements Runnable {
 	private boolean skip = false;
 	private final Screen screen;
 	private final byte[] ringBuffer;
-	private Disassembler disassembler;
 	private long stopAddress;
+	private List<StateChangedListener> listeners;
 	
 	public Cpu(Screen screen, byte[] ringBuffer) {
 		this.screen = screen;
 		this.ringBuffer = ringBuffer;
 		memory = new int[MEM_SIZE];
 		registers =  new int[8];
-		disassembler = new Disassembler();
+		listeners = new ArrayList<StateChangedListener>();
 	}
 
 	public void loadFile(File dumpFile) {
@@ -66,13 +67,19 @@ public class Cpu implements Runnable {
 			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
 				String[] words = line.split(" ");
 				for (String word : words) {
-					setMem(addr++, Integer.parseInt(word, 16));
+					if (word.length() > 0) {
+						int int1 = Integer.parseInt(word, 16);
+						int high = int1 & 0xff;
+						int low = (int1 >> 8) & 0xff;
+						setMem(addr++, (high << 8) + low);
+					}
 				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
 			Utils.closeQuietly(reader);
+			informListeners();
 		}
 	}
 
@@ -220,6 +227,7 @@ public class Cpu implements Runnable {
 		for (long end = System.nanoTime(); timeRequired > (end - start); end = System.nanoTime()) {
 			Thread.yield();
 		}
+		informListeners();
 		return numCycles;
 	}
 	
@@ -359,9 +367,8 @@ public class Cpu implements Runnable {
 	}
 	
 	public String toString() {
-		return String.format("A=%04x B=%04x C=%04x X=%04x Y=%04x Z=%04x I=%04x J=%04x PC=%04x SP=%04x O=%04x Skip=%s, next=%s",
-				registers[0], registers[1], registers[2], registers[3], registers[4], registers[5], registers[6], registers[7], PC, SP, O, skip,
-				disassembler.disassemble(memory, PC).line);
+		return String.format("A=%04x B=%04x C=%04x X=%04x Y=%04x Z=%04x I=%04x J=%04x PC=%04x SP=%04x O=%04x Skip=%s",
+				registers[0], registers[1], registers[2], registers[3], registers[4], registers[5], registers[6], registers[7], PC, SP, O, skip);
 	}
 
 	public boolean isRunning() {
@@ -374,6 +381,24 @@ public class Cpu implements Runnable {
 
 	public void setStopAddress(long l) {
 		this.stopAddress = l;
+	}
+
+	public void addStateChangedListener(StateChangedListener listener) {
+		listeners.add(listener);
+	}
+	
+	private void informListeners() {
+		for (StateChangedListener listener : listeners) {
+			listener.cpuStateChanged();
+		}
+	}
+
+	public int getPC() {
+		return PC;
+	}
+
+	public int[] getMem() {
+		return memory;
 	}
 
 }

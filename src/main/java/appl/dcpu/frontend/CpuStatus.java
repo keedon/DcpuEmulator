@@ -3,8 +3,6 @@ package appl.dcpu.frontend;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -16,10 +14,11 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
 import appl.dcpu.processor.Cpu;
+import appl.dcpu.processor.StateChangedListener;
 
 import com.sun.tools.example.debug.bdi.Utils;
 
-public class CpuStatus extends JPanel implements ActionListener {
+public class CpuStatus extends JPanel implements ActionListener, StateChangedListener {
 
 	private static final long serialVersionUID = 1L;
 	private final Cpu cpu;
@@ -34,25 +33,17 @@ public class CpuStatus extends JPanel implements ActionListener {
 		this.memoryDump = memoryDump;
 		this.setBorder(new TitledBorder("Cpu Status"));
 		this.cpu = cpu;
-		setPreferredSize(new Dimension(800, 100));
-		setMinimumSize(new Dimension(800, 100));
+		cpu.addStateChangedListener(this);
 		this.setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
 		addButtons();
 		addStopAddress();
 		addRegisterPanel();
-		Timer updateTimer = new Timer();
-		updateTimer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				memoryDump.setDump();
-				registers.setText(cpu.toString());
-			}
-		}, 100L, 100L);
 	}
 	
 	private void addStopAddress() {
 		stopAddress = new JTextField("");
-		stopAddress.setMinimumSize(new Dimension(50, 40));
+		stopAddress.setMinimumSize(new Dimension(150, 40));
+		stopAddress.setMaximumSize(new Dimension(150, 40));
 		this.add(stopAddress);
 	}
 
@@ -113,5 +104,11 @@ public class CpuStatus extends JPanel implements ActionListener {
 			stop.setEnabled(false);
 			cpu.stop();
 		}
+	}
+
+	@Override
+	public void cpuStateChanged() {
+		memoryDump.setDump();
+		registers.setText(cpu.toString());
 	}
 }

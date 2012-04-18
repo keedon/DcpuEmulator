@@ -44,5 +44,9 @@ public class Utils {
 		}
 		return Integer.parseInt(text);
 	}
+	
+	public static String toHex(int value) {
+		return String.format("0x%04x", value);
+	}
 
 }

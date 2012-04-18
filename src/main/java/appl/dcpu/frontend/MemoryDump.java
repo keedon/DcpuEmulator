@@ -27,7 +27,6 @@ public class MemoryDump extends JPanel implements ActionListener {
 	public MemoryDump(Cpu cpu) {
 		this.setBorder(new TitledBorder("Memory"));
 		this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-		setPreferredSize(new Dimension(500, 500));
 		this.cpu = cpu;
 		address = new JTextField(10);
 		address.setText("0x0000");

@@ -3,7 +3,7 @@
 ; API:
 ;    jsr new_process - start a new process.
 ;         On entry a = start address of the new process
-;                  other registers (except SP/O) will be passed to process with no change
+;                  other registers will be passed to process with no change except sp and b.  b will be a pointer to the parent process structure
 ;         On exit - a = process id of new process or error no if the creation failed
 ;
 ;    jsr send - send a message to another process (may cause process switch)
@@ -12,6 +12,8 @@
 ;	    
 ;    jsr wait - wait for a message to arrive
 ;         On exit - b/c are the message parameters passed from the other process
+;
+;	 jsr done - kill the current process
 ;
 ;    jsr yield - let another process run - no registers will be harmed during this call
 ;
@@ -23,14 +25,21 @@
 ;    jsr malloc - allocate some memory size=a, on exit a = location or error no
 ;    jsr free - free memory pointed to by a, size b - on exit a = 0 for success or error no if failed
 ;
-; error numbers
-:success 				equ	0
-:process_start_failed	equ	-1
-:no_such_process		equ -2
-:alloc_failed			equ -3
-:not_valid_free			equ -4
-
+:process_work 				; Replace jump with kernel work area (saves 2 words!!)
+	   set pc,start
+;  kernel variables
+:free_list dat 0, 0, 0		; free memory areas
+:process_list dat kernel_task			; head pointer to process list
+:current_process dat kernel_task		; current process ptr
+:stack_size dat 64			; proess stack size - change to increase/decrease as you need - remember yield/wait need 10 words to store state
+:next_pid dat 1				; next pid		
+; rest of special - use as you want
 :start jsr	setup_memory
+		set a,demo_proc1
+		jsr new_process
+:blah
+		set pc,blah
+:demo_proc1
 :outer_loop
 		set b,100
 :loop	set a,100
@@ -40,7 +49,11 @@
 			set pc,loop
 		jsr free
 		set pc,outer_loop
-		
+:kernel_task
+		dat 0 ; next task
+		dat 0 ;pid=0
+		dat 0xffff	; kernel stack
+:
 ; Code goes here - add a couple of test processes
 ; This is process 0 (kernel)
 ;		set a,demo_proc1
@@ -58,7 +71,7 @@
 ;		set a,b					; string passed in b
 ;		jsr print_string
 ;		set a,100
-;		jsr malloc				; will eventuall run out of memory
+;		jsr malloc				; will eventually run out of memory
 ;		set pc,demo_proc1
 ;
 ; demo process 2
@@ -76,12 +89,64 @@
 ;
 ; kernel code starts here
 ;
+; Data structures
 ;
-; Initialise the memory map - the free list consists of a linked list of free areas minimum size 2 words - first word = next free area, second word = length (inc header)
+; error numbers
+:success 				equ	0
+:process_start_failed	equ	-1
+:no_such_process		equ -2
+:alloc_failed			equ -3
+:not_valid_free			equ -4
+;
+; Data structure for the free list - magic number (0xbeef), pointer to next free area, size of area
 :free_magic equ 0
 :next_free equ 1
 :free_size equ 2
 :magic_value equ 0xbeef
+;
+; Process structure
+:process_next equ 0		; next process in list
+:process_id   equ 1     ; id of this process
+:process_sp   equ 2     ; stack pointer of process
+:process_length equ 3	; size of process structure
+;
+; Create a process
+:new_process
+	set [process_work],a
+	set push,a			; save process state
+	set push,b
+	set push,c
+	set push,x
+	set push,y
+	set push,z
+	set push,i
+	set push,j
+	set a,process_length
+	jsr malloc
+	ife a,alloc_failed
+		set pc,process_create_failed
+	set b,[current_process]
+	set [process_next+a],[process_list]	; add to the list
+	set [process_id+a],[next_pid]
+	add [next_pid],1			; next
+	set [process_list],a
+	set [current_process],a		; will be top process after this call
+	set a,[stack_size]
+	jsr malloc
+	ife a,alloc_failed
+		set pc,process_stack_failed
+	set [process_sp + b],sp				; save current sp
+	set sp,a
+	add sp,[stack_size]					; top of stack area
+	set pc,[process_work]				; start process
+;
+; Terminate current process
+:done
+	
+	
+;
+; Initialise the memory map - the free list consists of a linked list of free areas minimum size 2 words - first word = next free area, second word = length (inc header)
+; last 64 bytes of memory are the kernel stack
 :setup_memory
 ; Initially two free areas <end of kernel>-0x7fff and 0xa000-0xffff (assuming 0x8000 - 0x9fff will be devices)
 	set x,end_of_kernel
@@ -94,6 +159,7 @@
 	set x,0xa000
 	set a,0xffff
 	sub a,x				; size of upper area
+	sub a,64			; less kernel stack
 	sub a,3				; skip header
 	set [free_magic + x],magic_value
 	set [free_size + x],a
@@ -167,5 +233,4 @@
 	set pc,pop
 	
 
-:free_list dat 0, 0, 0		; free memory areas
 :end_of_kernel

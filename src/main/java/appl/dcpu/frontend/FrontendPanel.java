@@ -1,7 +1,9 @@
 package appl.dcpu.frontend;
 
+import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -24,7 +26,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.border.TitledBorder;
 
 import appl.dcpu.processor.Cpu;
 import appl.dcpu.utility.Assembler;
@@ -52,15 +53,21 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 	private byte[] ringBuffer = new byte[16];
 	private int position = 0;
 
-	private JPanel upper;
-
 	private MemoryDump memoryDump;
+	private DisassemblerGui disassembler;
+
+	private JPanel topPanel;
+
+	private JPanel bottomPanel;
+
+	private JPanel sidePanel;
 
 	private void start() {
 		createFrame();
 		addScreen();
 		addKeyboard();
 		createProcessor();
+		addDisassembler();
 		addMemoryDump();
 		addMenu();
 		addCpuStatus();
@@ -72,17 +79,11 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 
 	private void addMemoryDump() {
 		memoryDump = new MemoryDump(cpu);
-		upper.add(memoryDump);
+		topPanel.add(memoryDump);
 	}
 
 	private void addKeyboard() {
 		addKeyListener(this);
-		keyboardBuffer = new JTextField();
-		keyboardBuffer.setMinimumSize(new Dimension(100, 20));
-		keyboardBuffer.setBorder(new TitledBorder("Keyboard Input"));
-		keyboardBuffer.setText("                ");
-		keyboardBuffer.addKeyListener(this);
-		content.add(keyboardBuffer);
 	}
 
 	private void createProcessor() {
@@ -91,10 +92,16 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 
 	private void createFrame() {
 		content = getContentPane();
-	    content.setLayout(new BoxLayout(content, BoxLayout.PAGE_AXIS));
-	    upper = new JPanel();
-	    upper.setLayout(new BoxLayout(upper, BoxLayout.LINE_AXIS));
-	    content.add(upper);
+	    content.setLayout(new BorderLayout());
+	    topPanel = new JPanel();
+	    topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.LINE_AXIS));
+	    sidePanel = new JPanel();
+	    sidePanel.setLayout(new GridLayout(2, 1));
+	    topPanel.add(sidePanel);
+	    content.add(topPanel, BorderLayout.CENTER);
+	    bottomPanel = new JPanel();
+	    bottomPanel.setLayout(new GridLayout(1, 1));
+	    content.add(bottomPanel, BorderLayout.SOUTH);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		try {
 			fc.setCurrentDirectory(new File(new File(".").getCanonicalPath()));
@@ -118,22 +125,27 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 
 	private void addCpuStatus() {
 		cpuStatus = new CpuStatus(cpu, memoryDump);
-		content.add(cpuStatus);
+		bottomPanel.add(cpuStatus);
 	}
 
 	private void drawBootMessage() {
 		String message = "** DCPU Emulator Booted V0.1 **";
 		for (int i = 0; i< message.length(); i++) {
-			screen.setMem(i, message.charAt(i) + 0x6380);
+			screen.setMem(i, message.charAt(i) + 0xf000);
 		}
 	}
 
 	private void addScreen() {
-		JPanel screenHolder = new JPanel();
-		screenHolder.setBorder(BorderFactory.createTitledBorder("Screen"));
 		screen = new Screen();
-		screenHolder.add(screen);
-		upper.add(screenHolder);
+		sidePanel.add(screen);
+	}
+	
+	private void addDisassembler() {
+		JPanel disasmHolder = new JPanel();
+		disasmHolder.setBorder(BorderFactory.createTitledBorder("Disassembly"));
+		disassembler = new DisassemblerGui(cpu);
+		disasmHolder.add(disassembler);
+		sidePanel.add(disasmHolder);
 	}
 
 	@Override

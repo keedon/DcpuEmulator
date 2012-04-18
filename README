@@ -21,3 +21,5 @@ TODO:
  * Add better keyboard support.
  * Add floppy disk support (when there are some more details)
  * Better error handling
+ * Add include to assembler
+ 

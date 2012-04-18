@@ -330,10 +330,10 @@ public class Assembler {
 	}
 
 	private int processLiteral(int value) {
-		if (value < 0x1f) {
+		if (value < 0x1f && value >= 0) {
 			return value + 0x20;
 		}
-		result.add(toHex(value));
+		result.add(toHex(value & 0xffff));
 		currentPC++;
 		return 0x1f;	// Next word
 	}
@@ -376,11 +376,20 @@ public class Assembler {
 		if (fullToken.contains("+")) {
 			// Register indirect
 			String[] parts = fullToken.split("\\+");
-			if (labelDictionary.containsKey(parts[0])) {
-				result.add(toHex(labelDictionary.get(parts[0]).value));
+			String offset;
+			int res;
+			if (REGISTERS.contains(parts[0])) {
+				res = REGISTERS.indexOf(parts[0]) + 0x10;
+				offset = parts[1];
+			} else {
+				res = REGISTERS.indexOf(parts[1]) + 0x10;
+				offset = parts[0];
+			}
+			if (labelDictionary.containsKey(offset)) {
+				result.add(toHex(labelDictionary.get(offset).value));
 				currentPC++;
-			} else if (isNumeric(parts[0])) {
-				int value = convertToNumber(parts[0]);
+			} else if (isNumeric(offset.substring(0, 1))) {
+				int value = convertToNumber(offset);
 				result.add(toHex(value));
 				currentPC++;
 			} else if (pass == 1) {
@@ -389,7 +398,7 @@ public class Assembler {
 			} else {
 				throw new RuntimeException("Unable to parse register + offset");
 			}
-			return REGISTERS.indexOf(parts[1]) + 0x10;
+			return res;
 		}
 		if (isNumeric(fullToken.substring(0, 1))) {
 			int value = convertToNumber(fullToken);

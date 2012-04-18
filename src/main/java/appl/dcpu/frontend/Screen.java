@@ -1,7 +1,6 @@
 package appl.dcpu.frontend;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -13,6 +12,7 @@ public class Screen extends JPanel {
 	private static final long serialVersionUID = 1L;
 	public static final int SCREEN_WIDTH = 32;
 	public static final int SCREEN_HEIGHT = 16;
+	private static final int BORDER = 5;
 	
 	private static final Color BLACK = new Color(0, 0, 0);
 	private static final Color RED = new Color(205, 0, 0);
@@ -43,7 +43,6 @@ public class Screen extends JPanel {
 	public Screen() {
 		font = new Font("Courier", Font.PLAIN, 14);
 		this.setFont(font);
-		setPreferredSize(new Dimension(500, 500));
 	}
 	
 	public void setMem(int pos, int ch) {
@@ -61,8 +60,8 @@ public class Screen extends JPanel {
 			int ch = screenText[pos];
 			char character = (char) (ch & 0x7f);
 			if (character == 0) character = ' ';
-			int x = (pos * charWidth) % (SCREEN_WIDTH * charWidth);
-			int y = ((pos * charWidth) / (SCREEN_WIDTH * charWidth)) * charHeight;
+			int x = BORDER + (pos * charWidth) % (SCREEN_WIDTH * charWidth);
+			int y = BORDER + ((pos * charWidth) / (SCREEN_WIDTH * charWidth)) * charHeight;
 			g.setColor(ANSI_COLORS[(ch >> 7) & 15]);
 			g.fillRect(x, y, charWidth, charHeight);
 			g.setColor(ANSI_COLORS[ch >> 12]);
