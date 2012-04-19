@@ -12,12 +12,17 @@ import java.util.TreeMap;
 
 public class Assembler {
 	public class AssemblyResult {
-		public final String hexResult;
+		public final char[] hexResult;
 		public final String listing;
 		public final boolean success;
 		
 		public AssemblyResult(String hex, String listing, boolean success) {
-			hexResult = hex;
+			hexResult = new char[hex.length() / 5];
+			int i = 0;
+			for (String word : hex.split(" ")) {
+				hexResult[i] = Character.toChars(Integer.parseInt(word, 16))[0];
+				i++;
+			}
 			this.listing = listing;
 			this.success = success;
 		}

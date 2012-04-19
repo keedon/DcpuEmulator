@@ -10,7 +10,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -184,15 +186,29 @@ public class FrontendPanel extends JFrame implements ActionListener, KeyListener
 		}
 	}
 
-	private void writeFile(File destFile, String assembledCode) {
+	private void writeFile(File destFile, String hexResult) {
 		BufferedWriter bw = null;
 		try {
 			bw = new BufferedWriter(new FileWriter(destFile));
-			bw.write(assembledCode);
+			bw.write(hexResult);
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(this, "Unable to write " + destFile);
 		} finally {
 			Utils.closeQuietly(bw);
+		}
+	}
+	
+	private void writeFile(File destFile, char[] hexResult) {
+		DataOutputStream dos = null;
+		try {
+			dos = new DataOutputStream(new FileOutputStream(destFile));
+			for (char hex : hexResult) {
+				dos.writeChar(hex);
+			}
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(this, "Unable to write " + destFile);
+		} finally {
+			Utils.closeQuietly(dos);
 		}
 	}
 
