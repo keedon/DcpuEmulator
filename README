@@ -1,10 +1,5 @@
 DCPU-16 emulator and assembler written in Java with a Swing front-end.
 
-Latest Changes:
-
- * Added disassembly window
- * changed CPU to use notch's cpu implementation (it will run the demo at http://dcpu.com/highnerd/ - you can load it from test/mem.dmp)
-
 GUI layout's still a bit rough, but it's ready for serious work (with care)
 
 To use.
@@ -23,7 +18,8 @@ File>Assemble - will assemble a file and put the resulting .hex file in the same
 Started work on message based runtime for DCPU-16 - should help shake out a few more bugs (see OS directory for details)
 
 TODO:
+ * Add better keyboard support.
  * Add floppy disk support (when there are some more details)
- * Remove old display window from gui
+ * Better error handling
  * Add include to assembler
  
