@@ -1,6 +1,8 @@
 package appl.dcpu.utility;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
@@ -47,6 +49,26 @@ public class Utils {
 	
 	public static String toHex(int value) {
 		return String.format("0x%04x", value);
+	}
+
+	public static void closeQuietly(DataInputStream br) {
+		try {
+			if (br != null) {
+				br.close();
+			}
+		} catch (IOException e) {
+			
+		}
+	}
+
+	public static void closeQuietly(DataOutputStream dos) {
+		try {
+			if (dos != null) {
+				dos.close();
+			}
+		} catch (IOException e) {
+			
+		}
 	}
 
 }
