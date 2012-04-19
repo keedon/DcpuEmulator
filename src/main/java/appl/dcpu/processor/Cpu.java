@@ -49,6 +49,7 @@ public class Cpu implements Runnable {
 	private final byte[] ringBuffer;
 	private long stopAddress;
 	private List<StateChangedListener> listeners;
+	private int instructions = 0;
 	
 	public Cpu(Screen screen, byte[] ringBuffer) {
 		this.screen = screen;
@@ -69,9 +70,7 @@ public class Cpu implements Runnable {
 				for (String word : words) {
 					if (word.length() > 0) {
 						int int1 = Integer.parseInt(word, 16);
-						int high = int1 & 0xff;
-						int low = (int1 >> 8) & 0xff;
-						setMem(addr++, (high << 8) + low);
+						setMem(addr++, int1);
 					}
 				}
 			}
@@ -227,7 +226,10 @@ public class Cpu implements Runnable {
 		for (long end = System.nanoTime(); timeRequired > (end - start); end = System.nanoTime()) {
 			Thread.yield();
 		}
-		informListeners();
+		instructions++;
+		if (instructions % 500 == 0) {
+			informListeners();
+		}
 		return numCycles;
 	}
 	
