@@ -1,6 +1,6 @@
 package appl.dcpu.utility;
 
-import scala.actors.threadpool.Arrays;
+import java.util.Arrays;
 
 public class Disassembler {
 	
