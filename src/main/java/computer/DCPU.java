@@ -289,7 +289,7 @@ public class DCPU {
 				+ tick * 100.0D / total + "% cpu use");
 	}
 
-	public static void attachDisplay(final DCPU cpu) {
+	private static void attachDisplay(final DCPU cpu) {
 		final VirtualMonitor display = new VirtualMonitor(cpu.ram, 32768);
 		final VirtualKeyboard keyboard = new VirtualKeyboard(cpu.ram, 36864,
 				new AWTKeyMapping());
@@ -413,6 +413,8 @@ public class DCPU {
 				cpu.ram[i] = ch;
 			}
 		} catch (EOFException e) {
+			e.printStackTrace();
+
 			dis.close();
 
 			dump(cpu.ram, 0, 768);

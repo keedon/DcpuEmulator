@@ -1,6 +1,6 @@
 jsr SCREENSAVER
 :Screensaver
-      SET I, 384
+      SET I, 512
       :ss_loop
                  SET [0x8000], 1
                  jsr rand
